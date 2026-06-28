@@ -1,0 +1,23 @@
+{
+  "name": "someonehx.github.io",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/build-content.mjs && vite-ssg build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5",
+    "vue-router": "^4.5"
+  },
+  "devDependencies": {
+    "@unhead/vue": "^2.1",
+    "@vitejs/plugin-vue": "^5.2",
+    "gray-matter": "^4.0",
+    "markdown-it": "^14.1",
+    "vite": "^6.2",
+    "vite-ssg": "^28.3"
+  }
+}
