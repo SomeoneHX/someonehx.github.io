@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar">
     <div class="navbar__inner container">
-      <router-link to="/" class="navbar__logo">someonehx</router-link>
+      <router-link to="/" class="navbar__logo">Someone.HX</router-link>
       <div class="navbar__links">
         <router-link to="/blog/" class="navbar__link">Blog</router-link>
       </div>

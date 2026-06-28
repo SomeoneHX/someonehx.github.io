@@ -1,6 +1,6 @@
 <template>
   <main class="home">
-    <RainPlaceholder />
+    <HeroBanner />
 
     <div class="home__drawer-wrapper">
       <DrawerSection />
@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import RainPlaceholder from '@/components/RainPlaceholder.vue'
+import HeroBanner from '@/components/HeroBanner.vue'
 import DrawerSection from '@/components/DrawerSection.vue'
 </script>
 

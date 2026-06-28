@@ -36,7 +36,7 @@ someonehx.github.io/
 │   │   └── ArticleView.vue        # 单篇文章正文
 │   ├── components/
 │   │   ├── NavBar.vue
-│   │   ├── RainPlaceholder.vue    # 雨天占位（100vh）
+│   │   ├── HeroBanner.vue         # Bing 每日一图（100vh）
 │   │   ├── DrawerSection.vue      # 滚动触发的抽屉
 │   │   ├── ProfileSection.vue     # 名称 + 外链
 │   │   ├── ArticleCard.vue        # 文章卡片
@@ -88,7 +88,7 @@ slug: custom-slug   # 可选，默认用文件名
 │       NavBar          │ ← fixed 顶部
 ├──────────────────────┤
 │                      │
-│   RainPlaceholder    │ ← 100vh 占位，用户后续提供 HTML
+│   HeroBanner         │ ← 100vh Bing 每日一图
 │                      │
 ├──────────────────────┤ ← 抽屉上沿（sticky）
 │   DrawerSection      │ ← 滚动时覆盖雨天区域
@@ -122,6 +122,6 @@ slug: custom-slug   # 可选，默认用文件名
 | 2 | 写 `scripts/build-content.mjs` + 示例文章 |
 | 3 | CSS 基础（reset、变量、全局样式） |
 | 4 | 路由、NavBar、App.vue 布局 |
-| 5 | 主页：RainPlaceholder → DrawerSection 滚动 → ProfileSection |
+| 5 | 主页：HeroBanner → DrawerSection 滚动 → ProfileSection |
 | 6 | ArticleCard、BlogView（含筛选）、ArticleView |
 | 7 | vite-plugin-ssg 配置 + GitHub Actions 部署 |

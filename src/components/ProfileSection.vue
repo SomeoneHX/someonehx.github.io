@@ -1,6 +1,6 @@
 <template>
   <div class="profile">
-    <h1 class="profile__name">someonehx</h1>
+    <h1 class="profile__name">Someone.HX</h1>
     <div class="profile__links">
       <a
         v-for="link in links"
@@ -16,8 +16,8 @@
 
 <script setup>
 const links = [
-  { label: 'GitHub', url: '#' },
-  { label: 'X', url: '#' },
+  { label: 'GitHub', url: 'https://github.com/SomeoneHX' },
+  { label: 'Luogu', url: 'https://www.luogu.com.cn/user/1816684' },
 ]
 </script>
 
