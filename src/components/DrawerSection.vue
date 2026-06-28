@@ -14,6 +14,7 @@
               v-for="article in latestArticles"
               :key="article.slug"
               :article="article"
+              @tagClick="goToTag"
             />
           </div>
 
@@ -40,11 +41,17 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import data from '@/generated/content.json'
 import ProfileSection from '@/components/ProfileSection.vue'
 import ArticleCard from '@/components/ArticleCard.vue'
 
+const router = useRouter()
 const latestArticles = computed(() => data.articles.slice(0, 6))
+
+function goToTag(tag) {
+  router.push(`/tags/${tag}/`)
+}
 </script>
 
 <style scoped>

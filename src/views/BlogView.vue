@@ -25,6 +25,7 @@
           v-for="article in filteredArticles"
           :key="article.slug"
           :article="article"
+          @tagClick="goToTag"
         />
       </div>
       <p v-else class="blog__empty">暂无文章</p>
@@ -34,11 +35,16 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import ArticleCard from '@/components/ArticleCard.vue'
 import data from '@/generated/content.json'
 
 const route = useRoute()
+const router = useRouter()
+
+function goToTag(tag) {
+  router.push(`/tags/${tag}/`)
+}
 
 const filterLabel = computed(() => {
   if (route.params.tag) return `标签: ${route.params.tag}`
