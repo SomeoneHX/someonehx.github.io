@@ -69,15 +69,22 @@
   background: var(--color-accent-light);
 }
 
-.card__ext-icon {
+.card__ext-link {
   position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
+  top: 0;
+  right: 0;
+  padding: var(--space-sm) var(--space-sm) var(--space-lg) var(--space-lg);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.card__ext-icon {
   color: var(--color-accent);
   opacity: 0.4;
   transition: opacity var(--transition-fast);
+  display: block;
 }
 
-.card:hover .card__ext-icon {
+.card__ext-link:hover .card__ext-icon {
   opacity: 1;
 }

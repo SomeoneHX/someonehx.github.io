@@ -1,7 +1,13 @@
 <template>
   <router-link :to="`${article.link ? '/projects/' : '/blog/'}${article.slug}/`" custom v-slot="{ href, navigate }">
     <a :href="href" class="card" @click="handleCardClick($event, navigate)">
-      <VIcon v-if="article.link" icon="mdi:open-in-new" width="14" class="card__ext-icon" />
+      <span
+        v-if="article.link"
+        class="card__ext-link"
+        @click.stop.prevent="openExternalLink(article.link)"
+      >
+        <VIcon icon="mdi:open-in-new" width="14" class="card__ext-icon" />
+      </span>
       <h3 class="card__title">{{ article.title }}</h3>
       <div class="card__meta">
         <VIcon icon="mdi:calendar-outline" width="14" class="card__meta-icon" />
@@ -34,6 +40,10 @@ function handleCardClick(event, navigate) {
   event.preventDefault()
   saveCardRect(event.currentTarget.getBoundingClientRect())
   navigate()
+}
+
+function openExternalLink(url) {
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 function formatDate(date) {
