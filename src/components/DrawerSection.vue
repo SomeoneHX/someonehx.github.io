@@ -18,7 +18,8 @@
           </div>
 
           <router-link to="/blog/" class="drawer__more">
-            查看更多 →
+            <span>查看更多</span>
+            <VIcon icon="mdi:arrow-right" width="14" class="drawer__more-icon" />
           </router-link>
         </div>
       </section>
@@ -73,7 +74,9 @@ const latestArticles = computed(() => data.articles.slice(0, 6))
 }
 
 .drawer__more {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   margin-top: var(--space-xl);
   font-size: var(--text-sm);
   color: var(--color-gray-500);
@@ -81,7 +84,16 @@ const latestArticles = computed(() => data.articles.slice(0, 6))
 }
 
 .drawer__more:hover {
-  color: var(--color-gray-900);
+  color: var(--color-accent);
+}
+
+.drawer__more-icon {
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.drawer__more:hover .drawer__more-icon {
+  transform: translateX(3px);
 }
 
 .drawer__links {

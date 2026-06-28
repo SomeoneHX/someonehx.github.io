@@ -5,10 +5,12 @@
         <h1 class="article__title">{{ article?.title }}</h1>
         <div class="article__meta">
           <time v-if="article?.date" :datetime="article.date">
+            <VIcon icon="mdi:calendar-outline" width="14" class="article__meta-icon" />
             {{ formatDate(article.date) }}
           </time>
           <span v-if="article?.category" class="article__category">
-            · {{ article.category }}
+            <VIcon icon="mdi:folder-outline" width="14" class="article__meta-icon" />
+            {{ article.category }}
           </span>
         </div>
         <div v-if="article?.tags?.length" class="article__tags">
@@ -70,9 +72,24 @@ function formatDate(date) {
 }
 
 .article__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
   font-size: var(--text-sm);
   color: var(--color-gray-500);
   margin-bottom: var(--space-md);
+}
+
+.article__meta time,
+.article__category {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.article__meta-icon {
+  flex-shrink: 0;
 }
 
 .article__category {
@@ -87,14 +104,19 @@ function formatDate(date) {
 
 .article__tag {
   font-size: var(--text-xs);
-  padding: 2px 8px;
-  border: 1px solid var(--color-gray-300);
+  padding: 3px 10px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-sm);
   color: var(--color-gray-600);
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast),
+              color var(--transition-fast),
+              background var(--transition-fast);
 }
 
 .article__tag:hover {
-  border-color: var(--color-gray-900);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-light);
 }
 
 .article__not-found {

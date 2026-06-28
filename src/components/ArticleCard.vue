@@ -1,7 +1,10 @@
 <template>
   <router-link :to="`/blog/${article.slug}/`" class="card">
     <h3 class="card__title">{{ article.title }}</h3>
-    <div class="card__meta">{{ formatDate(article.date) }}</div>
+    <div class="card__meta">
+      <VIcon icon="mdi:calendar-outline" width="14" class="card__meta-icon" />
+      {{ formatDate(article.date) }}
+    </div>
     <p class="card__description">{{ article.description }}</p>
     <div v-if="article.tags.length" class="card__tags">
       <span

@@ -3,11 +3,20 @@
     <div class="container section">
       <div class="blog__header">
         <template v-if="filterLabel">
-          <h1 class="blog__title">{{ filterLabel }}</h1>
-          <router-link to="/blog/" class="blog__clear">← 全部文章</router-link>
+          <h1 class="blog__title">
+            <VIcon icon="mdi:tag-outline" width="22" class="blog__title-icon" />
+            {{ filterLabel }}
+          </h1>
+          <router-link to="/blog/" class="blog__clear">
+            <VIcon icon="mdi:arrow-left" width="14" class="blog__clear-icon" />
+            全部文章
+          </router-link>
         </template>
         <template v-else>
-          <h1 class="blog__title">文章</h1>
+          <h1 class="blog__title">
+            <VIcon icon="mdi:post-outline" width="22" class="blog__title-icon" />
+            文章
+          </h1>
         </template>
       </div>
 
@@ -65,12 +74,22 @@ const filteredArticles = computed(() => {
 }
 
 .blog__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   font-size: var(--text-2xl);
   font-weight: 700;
 }
 
+.blog__title-icon {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
 .blog__clear {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   margin-top: var(--space-sm);
   font-size: var(--text-sm);
   color: var(--color-gray-500);
@@ -78,7 +97,11 @@ const filteredArticles = computed(() => {
 }
 
 .blog__clear:hover {
-  color: var(--color-gray-900);
+  color: var(--color-accent);
+}
+
+.blog__clear-icon {
+  flex-shrink: 0;
 }
 
 .blog__empty {

@@ -10,7 +10,10 @@
           target="_blank"
           rel="noopener noreferrer"
           class="footer__link"
-        >{{ link.label }}</a>
+        >
+          <VIcon :icon="link.icon" width="14" class="footer__link-icon" />
+          {{ link.label }}
+        </a>
       </div>
     </div>
   </footer>
@@ -18,8 +21,8 @@
 
 <script setup>
 const links = [
-  { label: 'GitHub', url: 'https://github.com/SomeoneHX' },
-  { label: 'Luogu', url: 'https://www.luogu.com.cn/user/1816684' },
+  { label: 'GitHub', icon: 'mdi:github', url: 'https://github.com/SomeoneHX' },
+  { label: 'Luogu', icon: 'simple-icons:luogu', url: 'https://www.luogu.com.cn/user/1816684' },
 ]
 </script>
 
@@ -47,6 +50,9 @@ const links = [
 }
 
 .footer__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-size: var(--text-sm);
   color: var(--color-gray-400);
   transition: color var(--transition-fast);
@@ -54,5 +60,9 @@ const links = [
 
 .footer__link:hover {
   color: var(--color-white);
+}
+
+.footer__link-icon {
+  flex-shrink: 0;
 }
 </style>

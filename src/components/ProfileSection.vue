@@ -9,15 +9,18 @@
         target="_blank"
         rel="noopener noreferrer"
         class="profile__link"
-      >{{ link.label }}</a>
+      >
+        <VIcon :icon="link.icon" width="16" class="profile__link-icon" />
+        {{ link.label }}
+      </a>
     </div>
   </div>
 </template>
 
 <script setup>
 const links = [
-  { label: 'GitHub', url: 'https://github.com/SomeoneHX' },
-  { label: 'Luogu', url: 'https://www.luogu.com.cn/user/1816684' },
+  { label: 'GitHub', icon: 'mdi:github', url: 'https://github.com/SomeoneHX' },
+  { label: 'Luogu', icon: 'simple-icons:luogu', url: 'https://www.luogu.com.cn/user/1816684' },
 ]
 </script>
 
@@ -40,6 +43,9 @@ const links = [
 }
 
 .profile__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-size: var(--text-sm);
   color: var(--color-gray-500);
   border-bottom: 1px solid transparent;
@@ -47,7 +53,11 @@ const links = [
 }
 
 .profile__link:hover {
-  color: var(--color-gray-900);
-  border-color: var(--color-gray-900);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.profile__link-icon {
+  flex-shrink: 0;
 }
 </style>

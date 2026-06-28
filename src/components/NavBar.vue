@@ -3,7 +3,10 @@
     <div class="navbar__inner container">
       <router-link to="/" class="navbar__logo">Someone.HX</router-link>
       <div class="navbar__links">
-        <router-link to="/blog/" class="navbar__link">Blog</router-link>
+        <router-link to="/blog/" class="navbar__link">
+          <VIcon icon="mdi:post-outline" width="16" class="navbar__link-icon" />
+          Blog
+        </router-link>
       </div>
     </div>
   </nav>
@@ -49,6 +52,9 @@
 }
 
 .navbar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-size: var(--text-sm);
   color: var(--color-gray-500);
   transition: color var(--transition-fast);
@@ -57,5 +63,9 @@
 .navbar__link:hover,
 .navbar__link--active {
   color: var(--color-gray-900);
+}
+
+.navbar__link-icon {
+  flex-shrink: 0;
 }
 </style>
