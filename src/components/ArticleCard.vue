@@ -1,6 +1,7 @@
 <template>
-  <router-link :to="`/blog/${article.slug}/`" custom v-slot="{ href, navigate }">
+  <router-link :to="`${article.link ? '/projects/' : '/blog/'}${article.slug}/`" custom v-slot="{ href, navigate }">
     <a :href="href" class="card" @click="handleCardClick($event, navigate)">
+      <VIcon v-if="article.link" icon="mdi:open-in-new" width="14" class="card__ext-icon" />
       <h3 class="card__title">{{ article.title }}</h3>
       <div class="card__meta">
         <VIcon icon="mdi:calendar-outline" width="14" class="card__meta-icon" />

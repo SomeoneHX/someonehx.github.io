@@ -28,16 +28,13 @@
       <section class="section">
         <div class="container">
           <h2 class="section__heading">项目</h2>
-          <div class="drawer__links">
-            <a
+          <div class="grid-2">
+            <ArticleCard
               v-for="site in projectArticles"
               :key="site.slug"
-              :href="site.link"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="drawer__link"
-            >{{ site.title }}</a>
-            <p v-if="!projectArticles.length" class="drawer__link drawer__link--empty">暂无项目</p>
+              :article="site"
+            />
+            <p v-if="!projectArticles.length" class="drawer__empty">暂无项目</p>
           </div>
           <router-link to="/projects/" class="drawer__more">
             <span>全部项目</span>
@@ -114,33 +111,9 @@ function goToTag(tag) {
   transform: translateX(3px);
 }
 
-.drawer__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-md);
-}
-
-.drawer__link {
+.drawer__empty {
+  color: var(--color-gray-400);
   font-size: var(--text-sm);
-  color: var(--color-gray-500);
-  border-bottom: 1px solid var(--color-gray-300);
-  padding-bottom: 2px;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-}
-
-.drawer__link:hover {
-  color: var(--color-gray-900);
-  border-color: var(--color-gray-900);
-}
-
-.drawer__link--empty {
-  color: var(--color-gray-300);
-  border-bottom: none;
-  cursor: default;
-}
-
-.drawer__link--empty:hover {
-  color: var(--color-gray-300);
-  border-color: transparent;
+  grid-column: 1 / -1;
 }
 </style>
