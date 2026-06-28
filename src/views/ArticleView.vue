@@ -1,5 +1,5 @@
 <template>
-  <article class="article">
+  <article ref="rootRef" class="article" :style="flipStyle">
     <div class="container">
       <header class="article__header">
         <h1 class="article__title">{{ article?.title }}</h1>
@@ -35,12 +35,70 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import DynamicContent from '@/components/DynamicContent.vue'
+import { takeCardRect } from '@/utils/cardStore'
 import data from '@/generated/content.json'
 
 const route = useRoute()
+const rootRef = ref(null)
+const flipStyle = ref(null)
+const rect = takeCardRect()
+
+if (rect) {
+  const computedStyle = getComputedStyle(document.documentElement)
+  const navHeight = parseFloat(computedStyle.getPropertyValue('--nav-height')) || 56
+  const radiusMd = computedStyle.getPropertyValue('--radius-md').trim() || '12px'
+  const shadowMd = '0 4px 16px rgba(0, 0, 0, 0.08)'
+
+  const finalW = window.innerWidth
+  const finalH = window.innerHeight - navHeight
+  const dx = rect.left
+  const dy = rect.top - navHeight
+  const sx = rect.width / finalW
+  const sy = rect.height / finalH
+
+  flipStyle.value = {
+    transformOrigin: '0 0',
+    transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
+    background: '#ffffff',
+    borderRadius: radiusMd,
+    boxShadow: shadowMd,
+    overflow: 'hidden',
+  }
+
+  const startTransform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+
+  onMounted(() => {
+    const el = rootRef.value
+    if (!el) return
+
+    requestAnimationFrame(() => {
+      flipStyle.value = { ...flipStyle.value, boxShadow: undefined }
+
+      const anim = el.animate([
+        {
+          transform: startTransform,
+          borderRadius: radiusMd,
+          background: '#ffffff',
+        },
+        {
+          transform: 'translate(0, 0) scale(1, 1)',
+          borderRadius: '0px',
+          background: 'transparent',
+        },
+      ], {
+        duration: 500,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      })
+
+      anim.finished.then(() => {
+        flipStyle.value = null
+      })
+    })
+  })
+}
 
 const article = computed(() =>
   data.articles.find(a => a.slug === route.params.slug) || null

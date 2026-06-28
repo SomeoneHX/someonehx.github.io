@@ -17,12 +17,11 @@
 
 <style scoped>
 .navbar {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 100;
   height: var(--nav-height);
+  flex-shrink: 0;
   background: var(--color-white);
   border-bottom: 1px solid var(--color-gray-200);
   backdrop-filter: blur(8px);
