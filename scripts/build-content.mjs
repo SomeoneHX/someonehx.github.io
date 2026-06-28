@@ -30,6 +30,8 @@ function build() {
       series: data.series || null,
       seriesOrder: data.seriesOrder || null,
       description: data.description || '',
+      link: data.link || null,
+      linkLabel: data.linkLabel || null,
       html,
     }
     articles.push(article)

@@ -27,12 +27,22 @@
 
       <section class="section">
         <div class="container">
-          <h2 class="section__heading">其他站点</h2>
+          <h2 class="section__heading">项目</h2>
           <div class="drawer__links">
-            <slot name="links">
-              <a href="#" class="drawer__link">待添加</a>
-            </slot>
+            <a
+              v-for="site in projectArticles"
+              :key="site.slug"
+              :href="site.link"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="drawer__link"
+            >{{ site.title }}</a>
+            <p v-if="!projectArticles.length" class="drawer__link drawer__link--empty">暂无项目</p>
           </div>
+          <router-link to="/projects/" class="drawer__more">
+            <span>全部项目</span>
+            <VIcon icon="mdi:arrow-right" width="14" class="drawer__more-icon" />
+          </router-link>
         </div>
       </section>
     </div>
@@ -47,7 +57,8 @@ import ProfileSection from '@/components/ProfileSection.vue'
 import ArticleCard from '@/components/ArticleCard.vue'
 
 const router = useRouter()
-const latestArticles = computed(() => data.articles.slice(0, 6))
+const latestArticles = computed(() => data.articles.filter(a => !a.link).slice(0, 6))
+const projectArticles = computed(() => data.articles.filter(a => a.link))
 
 function goToTag(tag) {
   router.push(`/tags/${tag}/`)
@@ -120,5 +131,16 @@ function goToTag(tag) {
 .drawer__link:hover {
   color: var(--color-gray-900);
   border-color: var(--color-gray-900);
+}
+
+.drawer__link--empty {
+  color: var(--color-gray-300);
+  border-bottom: none;
+  cursor: default;
+}
+
+.drawer__link--empty:hover {
+  color: var(--color-gray-300);
+  border-color: transparent;
 }
 </style>

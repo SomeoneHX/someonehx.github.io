@@ -23,6 +23,17 @@
         </div>
       </header>
 
+      <a
+        v-if="article?.link"
+        :href="article.link"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="article__visit-btn"
+      >
+        <VIcon icon="mdi:open-in-new" width="16" />
+        {{ article.linkLabel || '访问项目' }}
+      </a>
+
       <DynamicContent
         v-if="article"
         :html="article.html"
@@ -181,5 +192,23 @@ function formatDate(date) {
   padding: var(--space-3xl) 0;
   color: var(--color-gray-400);
   text-align: center;
+}
+
+.article__visit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xl);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-accent);
+  color: #fff;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+  transition: opacity var(--transition-fast);
+}
+
+.article__visit-btn:hover {
+  opacity: 0.85;
+  color: #fff;
 }
 </style>
