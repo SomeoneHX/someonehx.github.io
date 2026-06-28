@@ -2,11 +2,11 @@
   <section class="hero-banner">
     <div
       class="hero-banner__bg"
-      :style="bgUrl ? { backgroundImage: `url(${bgUrl})` } : undefined"
+      :style="bgUrl ? { backgroundImage: `url(${bgUrl})`, filter: `blur(${blurAmount}px)`, transform: `scale(${scaleAmount})` } : undefined"
       :class="{ 'hero-banner__bg--visible': imageVisible }"
     />
 
-    <div class="hero-banner__overlay" />
+    <div class="hero-banner__overlay" :style="overlayStyle" />
 
     <div class="hero-banner__footer" v-if="copyright">
       <p class="hero-banner__copyright">{{ copyright }}</p>
@@ -15,36 +15,92 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+
+const CACHE_KEY = 'hero-banner'
 
 const bgUrl = ref('')
 const copyright = ref('')
 const imageVisible = ref(false)
+const scrollProgress = ref(0)
+
+const blurAmount = computed(() => scrollProgress.value * 15)
+const scaleAmount = computed(() => 1 + scrollProgress.value * 0.15)
+
+const overlayStyle = computed(() => {
+  const a = 0.1 + scrollProgress.value * 0.5
+  const b = 0.5 + scrollProgress.value * 0.4
+  return {
+    background: `linear-gradient(180deg, rgba(0,0,0,${a}) 0%, rgba(0,0,0,${b}) 100%)`,
+  }
+})
+
+function onScroll() {
+  const heroHeight = window.innerHeight - 56
+  scrollProgress.value = Math.min(window.scrollY / heroHeight, 1)
+}
+
+function loadImage(url, cp) {
+  const img = new Image()
+  img.onload = () => {
+    bgUrl.value = url
+    imageVisible.value = true
+  }
+  img.src = url
+  copyright.value = cp
+}
 
 onMounted(async () => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+
+  const cached = getCached()
+  if (cached) {
+    loadImage(cached.url, cached.copyright)
+    return
+  }
+
   try {
     const res = await fetch('https://bing.biturl.top/?format=json')
     const data = await res.json()
-
-    const img = new Image()
-    img.onload = () => {
-      bgUrl.value = data.url
-      imageVisible.value = true
-    }
-    img.src = data.url
-
-    copyright.value = data.copyright
+    setCached(data.url, data.copyright)
+    loadImage(data.url, data.copyright)
   } catch {
     // fallback: keep gray background
   }
 })
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+})
+
+function getCached() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw)
+    const today = new Date().toISOString().slice(0, 10)
+    return data.date === today ? data : null
+  } catch {
+    return null
+  }
+}
+
+function setCached(url, cp) {
+  const data = {
+    date: new Date().toISOString().slice(0, 10),
+    url,
+    copyright: cp,
+  }
+  localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+}
 </script>
 
 <style scoped>
 .hero-banner {
   height: calc(100vh - var(--nav-height));
-  position: relative;
-  z-index: 0;
+  position: sticky;
+  top: var(--nav-height);
+  z-index: 1;
   overflow: hidden;
   background: var(--color-gray-100);
 }
@@ -57,6 +113,7 @@ onMounted(async () => {
   background-repeat: no-repeat;
   opacity: 0;
   transition: opacity 0.8s ease;
+  will-change: transform, filter;
 }
 
 .hero-banner__bg--visible {
