@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, readdirSync } from 'fs'
-import { resolve, join, basename } from 'path'
+import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
+import { resolve, dirname, join, basename } from 'path'
 import matter from 'gray-matter'
 import MarkdownIt from 'markdown-it'
 
@@ -51,6 +51,7 @@ function build() {
   articles.sort((a, b) => new Date(b.date) - new Date(a.date))
 
   const result = { articles, tagsIndex, categoriesIndex, seriesIndex }
+  mkdirSync(dirname(outFile), { recursive: true })
   writeFileSync(outFile, JSON.stringify(result, null, 2), 'utf-8')
   console.log(`Built ${articles.length} articles → ${outFile}`)
 }
