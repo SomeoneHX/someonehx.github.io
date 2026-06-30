@@ -21,6 +21,7 @@ export default function remarkBilibili() {
         const num = idPart.replace(/^AV/gi, '')
         src += 'aid=' + num
       }
+      src += '&muted=1'
       if (qs) src += '&' + qs
 
       node.data = node.data || {}
@@ -34,6 +35,7 @@ export default function remarkBilibili() {
             src,
             frameborder: 0,
             allowfullscreen: true,
+            muted: true,
             allow: 'autoplay; encrypted-media',
             style: STYLES,
           },
