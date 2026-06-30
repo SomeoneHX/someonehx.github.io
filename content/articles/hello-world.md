@@ -1,7 +1,7 @@
 ---
 title: Hello World
 date: 2026-06-21
-tags: [hello, test]
+tags: [你好, 测试]
 category: general
 description: 这是我的第一篇文章
 published: true
