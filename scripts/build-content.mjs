@@ -3,6 +3,7 @@ import { resolve, dirname, join, basename } from 'path'
 import matter from 'gray-matter'
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
+import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
 import remarkDirective from 'remark-directive'
 import remarkContainer from './remark-container.mjs'
@@ -16,14 +17,15 @@ import rehypeDetailsSummary from './rehype-details-summary.mjs'
 
 const processor = unified()
   .use(remarkParse)
+  .use(remarkMath)
   .use(remarkGfm)
   .use(remarkDirective)
   .use(remarkContainer)
   .use(remarkCodeMeta)
   .use(remarkRehype, { allowDangerousHtml: true })
   .use(rehypeRaw)
-  .use(rehypePrism)
   .use(rehypeKatex)
+  .use(rehypePrism)
   .use(rehypeDetailsSummary)
   .use(rehypeStringify)
 

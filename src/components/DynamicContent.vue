@@ -8,7 +8,9 @@ defineProps({
 })
 </script>
 
-<style scoped>
+<style>
+@import 'katex/dist/katex.css';
+
 .dynamic-content h1,
 .dynamic-content h2,
 .dynamic-content h3 {
