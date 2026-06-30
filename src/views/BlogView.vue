@@ -88,6 +88,11 @@ const filteredArticles = computed(() => {
 }
 
 .blog__clear {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
