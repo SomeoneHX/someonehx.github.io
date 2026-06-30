@@ -126,6 +126,14 @@ defineProps({
   margin: var(--space-lg) auto;
 }
 
+.dynamic-content .bilibili-embed {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  margin-bottom: var(--space-md);
+  background: var(--color-black);
+}
+
 .dynamic-content hr {
   border: none;
   border-top: 1px solid var(--color-gray-200);

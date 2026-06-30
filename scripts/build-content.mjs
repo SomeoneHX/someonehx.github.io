@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm'
 import remarkDirective from 'remark-directive'
 import remarkContainer from './remark-container.mjs'
 import remarkCodeMeta from './remark-code-meta.mjs'
+import remarkBilibili from './remark-bilibili.mjs'
 import remarkRehype from 'remark-rehype'
 import rehypeRaw from 'rehype-raw'
 import rehypePrism from 'rehype-prism-plus'
@@ -22,6 +23,7 @@ const processor = unified()
   .use(remarkDirective)
   .use(remarkContainer)
   .use(remarkCodeMeta)
+  .use(remarkBilibili)
   .use(remarkRehype, { allowDangerousHtml: true })
   .use(rehypeRaw)
   .use(rehypeKatex)
