@@ -222,7 +222,7 @@ function goBack() {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
-  margin-bottom: var(--space-xl);
+  margin-top: var(--space-md);
 }
 
 .article__visit-btn {
