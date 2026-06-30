@@ -52,6 +52,8 @@ async function build() {
       : data.link
         ? [{ label: data.linkLabel || '打开链接', url: data.link }]
         : []
+    const text = html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+
     const article = {
       slug,
       title: data.title || slug,
@@ -60,6 +62,7 @@ async function build() {
       description: data.description || '',
       links,
       html,
+      text,
     }
     articles.push(article)
 

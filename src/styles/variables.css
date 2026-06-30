@@ -15,6 +15,7 @@
 
   /* surfaces */
   --color-surface: #ffffff;
+  --color-glass-bg: rgba(255, 255, 255, 0.75);
   --color-navbar-bg: rgba(255, 255, 255, 0.8);
 
   /* warm accent */
@@ -88,6 +89,7 @@
   --color-gray-900: #eee;
 
   --color-surface: #1a1a2e;
+  --color-glass-bg: rgba(26, 26, 46, 0.85);
   --color-navbar-bg: rgba(26, 26, 46, 0.85);
   --color-accent-light: #3d2e00;
   --color-bg-warm: #0f0f1a;

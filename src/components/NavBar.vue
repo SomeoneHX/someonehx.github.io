@@ -15,20 +15,45 @@
           <VIcon icon="mdi:tag-outline" width="16" class="navbar__link-icon" />
           标签
         </router-link>
+        <button class="navbar__search-btn" @click="openSearch" title="搜索">
+          <VIcon icon="mdi:magnify" width="16" />
+        </button>
         <button class="navbar__theme-btn" @click="toggleDarkMode" :title="isDark ? '切换亮色模式' : '切换深色模式'">
           <VIcon :icon="isDark ? 'mdi:white-balance-sunny' : 'mdi:moon-waning-crescent'" width="16" />
         </button>
       </div>
     </div>
   </nav>
+  <SearchModal :visible="showSearch" @close="closeSearch" />
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
 import { useDarkMode } from '@/composables/useDarkMode'
+import SearchModal from '@/components/SearchModal.vue'
 
 const { isDark, initDarkMode, toggleDarkMode } = useDarkMode()
 onMounted(initDarkMode)
+
+const showSearch = ref(false)
+
+function openSearch() {
+  showSearch.value = true
+}
+
+function closeSearch() {
+  showSearch.value = false
+}
+
+function onKeydown(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault()
+    showSearch.value = true
+  }
+}
+
+onMounted(() => document.addEventListener('keydown', onKeydown))
+onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 </script>
 
 <style scoped>
@@ -85,6 +110,7 @@ onMounted(initDarkMode)
   flex-shrink: 0;
 }
 
+.navbar__search-btn,
 .navbar__theme-btn {
   display: inline-flex;
   align-items: center;
@@ -96,6 +122,7 @@ onMounted(initDarkMode)
   padding: 0;
 }
 
+.navbar__search-btn:hover,
 .navbar__theme-btn:hover {
   color: var(--color-accent);
 }

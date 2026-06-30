@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@iconify/vue": "^5.0.1",
+    "fuse.js": "^7.4.2",
     "hastscript": "^9.0.1",
     "katex": "^0.17.0",
     "prismjs": "^1.30.0",
