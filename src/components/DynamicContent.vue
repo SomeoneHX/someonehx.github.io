@@ -178,12 +178,6 @@ defineProps({
   cursor: pointer;
   font-weight: 600;
   margin-bottom: var(--space-sm);
-  list-style: none;
-}
-
-.dynamic-content .box > summary::marker {
-  display: none;
-  content: '';
 }
 
 .dynamic-content .align-center {
