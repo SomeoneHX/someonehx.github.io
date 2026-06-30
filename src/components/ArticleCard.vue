@@ -1,5 +1,5 @@
 <template>
-  <router-link :to="`${article.link ? '/projects/' : '/blog/'}${article.slug}/`" custom v-slot="{ href, navigate }">
+  <router-link :to="`/blog/${article.slug}/`" custom v-slot="{ href, navigate }">
     <a :href="href" class="card" @click="handleCardClick($event, navigate)">
       <span
         v-if="article.link"

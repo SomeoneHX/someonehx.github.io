@@ -7,7 +7,7 @@
           <VIcon icon="mdi:post-outline" width="16" class="navbar__link-icon" />
           Blog
         </router-link>
-        <router-link to="/projects/" class="navbar__link">
+        <router-link to="/tags/%E9%A1%B9%E7%9B%AE/" class="navbar__link">
           <VIcon icon="mdi:code-braces" width="16" class="navbar__link-icon" />
           项目
         </router-link>

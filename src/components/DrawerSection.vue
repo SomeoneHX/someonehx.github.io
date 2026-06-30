@@ -30,13 +30,14 @@
           <h2 class="section__heading">项目</h2>
           <div class="grid-2">
             <ArticleCard
-              v-for="site in projectArticles"
-              :key="site.slug"
-              :article="site"
+              v-for="article in projectArticles"
+              :key="article.slug"
+              :article="article"
+              @tagClick="goToTag"
             />
             <p v-if="!projectArticles.length" class="drawer__empty">暂无项目</p>
           </div>
-          <router-link to="/projects/" class="drawer__more">
+          <router-link to="/tags/%E9%A1%B9%E7%9B%AE/" class="drawer__more">
             <span>全部项目</span>
             <VIcon icon="mdi:arrow-right" width="14" class="drawer__more-icon" />
           </router-link>
@@ -54,8 +55,11 @@ import ProfileSection from '@/components/ProfileSection.vue'
 import ArticleCard from '@/components/ArticleCard.vue'
 
 const router = useRouter()
-const latestArticles = computed(() => data.articles.filter(a => !a.link).slice(0, 6))
-const projectArticles = computed(() => data.articles.filter(a => a.link))
+const latestArticles = computed(() => data.articles.slice(0, 6))
+const projectArticles = computed(() => {
+  const slugs = data.tagsIndex['项目'] || []
+  return data.articles.filter(a => slugs.includes(a.slug))
+})
 
 function goToTag(tag) {
   router.push(`/tags/${tag}/`)

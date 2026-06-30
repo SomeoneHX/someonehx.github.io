@@ -7,15 +7,15 @@
             <VIcon icon="mdi:tag-outline" width="22" class="blog__title-icon" />
             {{ filterLabel }}
           </h1>
-          <router-link :to="isProjects ? '/projects/' : '/blog/'" class="blog__clear">
+          <router-link to="/blog/" class="blog__clear">
             <VIcon icon="mdi:arrow-left" width="14" class="blog__clear-icon" />
-            {{ isProjects ? '全部项目' : '全部文章' }}
+            全部文章
           </router-link>
         </template>
         <template v-else>
           <h1 class="blog__title">
-            <VIcon :icon="isProjects ? 'mdi:code-braces' : 'mdi:post-outline'" width="22" class="blog__title-icon" />
-            {{ isProjects ? '项目' : '文章' }}
+            <VIcon icon="mdi:post-outline" width="22" class="blog__title-icon" />
+            文章
           </h1>
         </template>
       </div>
@@ -42,8 +42,6 @@ import data from '@/generated/content.json'
 const route = useRoute()
 const router = useRouter()
 
-const isProjects = computed(() => route.path.startsWith('/projects'))
-
 function goToTag(tag) {
   router.push(`/tags/${tag}/`)
 }
@@ -56,12 +54,8 @@ const filterLabel = computed(() => {
 })
 
 const filteredArticles = computed(() => {
-  let list = data.articles.filter(a => isProjects.value ? a.link : !a.link)
+  const slugSet = new Set([''])
 
-  const hasFilter = route.params.tag || route.params.category || route.params.series
-  if (!hasFilter) return list
-
-  const slugSet = new Set()
   if (route.params.tag && data.tagsIndex[route.params.tag]) {
     data.tagsIndex[route.params.tag].forEach(s => slugSet.add(s))
   }
@@ -72,7 +66,11 @@ const filteredArticles = computed(() => {
     data.seriesIndex[route.params.series].forEach(s => slugSet.add(s))
   }
 
-  return list.filter(a => slugSet.has(a.slug))
+  const hasFilter = route.params.tag || route.params.category || route.params.series
+  if (hasFilter) {
+    return data.articles.filter(a => slugSet.has(a.slug))
+  }
+  return data.articles
 })
 </script>
 

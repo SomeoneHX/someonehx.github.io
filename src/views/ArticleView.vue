@@ -31,7 +31,7 @@
         class="article__visit-btn"
       >
         <VIcon icon="mdi:open-in-new" width="16" />
-        {{ article.linkLabel || '访问项目' }}
+        {{ article.linkLabel || '打开链接' }}
       </a>
 
       <DynamicContent

@@ -4,7 +4,7 @@ date: 2026-06-28
 link: https://github.com/SomeoneHX
 linkLabel: 访问 GitHub
 description: 一个很有意思的开源项目
-tags: [project]
+tags: [项目]
 category: projects
 published: true
 ---
