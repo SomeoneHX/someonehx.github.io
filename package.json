@@ -12,6 +12,7 @@
     "@iconify/vue": "^5.0.1",
     "hastscript": "^9.0.1",
     "katex": "^0.17.0",
+    "prismjs": "^1.30.0",
     "rehype-katex": "^7.0.1",
     "rehype-prism-plus": "^2.0.2",
     "rehype-raw": "^7.0.0",

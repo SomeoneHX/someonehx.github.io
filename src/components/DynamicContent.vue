@@ -10,6 +10,7 @@ defineProps({
 
 <style>
 @import 'katex/dist/katex.css';
+@import 'prismjs/themes/prism.css';
 
 .dynamic-content h1,
 .dynamic-content h2,
@@ -200,67 +201,4 @@ defineProps({
   margin-top: var(--space-sm);
 }
 
-.dynamic-content .token.comment,
-.dynamic-content .token.prolog,
-.dynamic-content .token.doctype,
-.dynamic-content .token.cdata {
-  color: var(--color-gray-400);
-  font-style: italic;
-}
-
-.dynamic-content .token.punctuation {
-  color: var(--color-gray-500);
-}
-
-.dynamic-content .token.property,
-.dynamic-content .token.tag,
-.dynamic-content .token.boolean,
-.dynamic-content .token.number,
-.dynamic-content .token.constant,
-.dynamic-content .token.symbol,
-.dynamic-content .token.deleted {
-  color: var(--color-gray-800);
-}
-
-.dynamic-content .token.selector,
-.dynamic-content .token.attr-name,
-.dynamic-content .token.string,
-.dynamic-content .token.char,
-.dynamic-content .token.builtin,
-.dynamic-content .token.inserted {
-  color: var(--color-gray-700);
-}
-
-.dynamic-content .token.operator,
-.dynamic-content .token.entity,
-.dynamic-content .token.url {
-  color: var(--color-gray-600);
-}
-
-.dynamic-content .token.atrule,
-.dynamic-content .token.attr-value,
-.dynamic-content .token.keyword {
-  color: var(--color-gray-900);
-  font-weight: 600;
-}
-
-.dynamic-content .token.function,
-.dynamic-content .token.class-name,
-.dynamic-content .token.maybe-class-name {
-  color: var(--color-gray-800);
-}
-
-.dynamic-content .token.regex,
-.dynamic-content .token.important,
-.dynamic-content .token.variable {
-  color: var(--color-gray-700);
-}
-
-.dynamic-content .token.bold {
-  font-weight: bold;
-}
-
-.dynamic-content .token.italic {
-  font-style: italic;
-}
 </style>
