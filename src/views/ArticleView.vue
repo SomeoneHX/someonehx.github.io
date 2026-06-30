@@ -61,6 +61,7 @@ const flipStyle = ref(null)
 const rect = takeCardRect()
 
 if (rect) {
+  window.scrollTo(0, 0)
   const computedStyle = getComputedStyle(document.documentElement)
   const navHeight = parseFloat(computedStyle.getPropertyValue('--nav-height')) || 56
   const radiusMd = computedStyle.getPropertyValue('--radius-md').trim() || '12px'
