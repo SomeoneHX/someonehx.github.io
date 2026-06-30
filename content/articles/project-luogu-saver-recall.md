@@ -6,6 +6,7 @@ links:
     url: https://someonehx.github.io/luogu-saver-recall/
   - label: Github仓库
     url: https://github.com/SomeoneHX/luogu-saver-recall
+cover: /covers/luogu-saver-recall.png
 description: 我常常追忆旧版本保存站
 tags: [项目, 洛谷, 保存站]
 published: true

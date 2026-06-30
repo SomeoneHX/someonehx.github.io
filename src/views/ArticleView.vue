@@ -182,14 +182,14 @@ function goBack() {
 .article__header-inner {
   position: relative;
   z-index: 1;
-  padding: var(--space-2xl) var(--space-lg);
+  padding: var(--space-lg);
 }
 
 .article__back {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-sm);
   font-size: var(--text-sm);
   color: var(--color-gray-500);
   background: none;
@@ -216,7 +216,7 @@ function goBack() {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-xs);
 }
 
 .article__header--hero .article__title {
@@ -230,7 +230,7 @@ function goBack() {
   gap: var(--space-md);
   font-size: var(--text-sm);
   color: var(--color-gray-500);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-xs);
 }
 
 .article__header--hero .article__meta {

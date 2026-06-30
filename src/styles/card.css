@@ -14,7 +14,7 @@
 
 .card__cover {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 5 / 2;
   object-fit: cover;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   display: block;
@@ -24,12 +24,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-accent);
-  font-size: var(--text-2xl);
+  background: var(--color-card-cover-bg, var(--color-accent));
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--color-white);
   text-align: center;
-  padding: var(--space-md);
+  padding: var(--space-sm);
 }
 
 .card__content {
