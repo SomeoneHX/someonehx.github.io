@@ -1,6 +1,7 @@
 ---
 title: 在Windows98上愉快地上洛谷编程
 date: 2026-03-22
+cover: /covers/vintage-brown.png
 links:
   - label: 在洛谷查看
     url: https://www.luogu.com.cn/article/bfubv5gh

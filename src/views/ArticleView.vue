@@ -1,12 +1,12 @@
 <template>
   <article ref="rootRef" class="article" :style="flipStyle">
-    <div class="container">
-      <header v-if="article" class="article__header" :class="{ 'article__header--hero': article.cover }">
-        <div v-if="article.cover" class="article__header-bg">
-          <img :src="article.cover" alt="" class="article__header-bg-img" />
-          <div class="article__header-overlay" />
-        </div>
-        <div class="article__header-inner">
+    <header v-if="article" class="article__header" :class="{ 'article__header--hero': article.cover }">
+      <div v-if="article.cover" class="article__header-bg">
+        <img :src="article.cover" alt="" class="article__header-bg-img" />
+        <div class="article__header-overlay" />
+      </div>
+      <div class="article__header-inner">
+        <div class="container">
           <button class="article__back" @click="goBack">
             <VIcon icon="mdi:arrow-left" width="14" />
             返回
@@ -40,8 +40,10 @@
             </a>
           </div>
         </div>
-      </header>
+      </div>
+    </header>
 
+    <div class="container">
       <p v-if="!article" class="article__not-found">文章未找到</p>
       <template v-else>
         <DynamicContent :html="article.html" class="article__body" />
@@ -155,7 +157,7 @@ function goBack() {
 .article__header--hero {
   position: relative;
   border-bottom: none;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   overflow: hidden;
   padding: 0;
 }
@@ -182,7 +184,10 @@ function goBack() {
 .article__header-inner {
   position: relative;
   z-index: 1;
-  padding: var(--space-lg);
+}
+
+.article__header--hero .article__header-inner {
+  padding: var(--space-lg) 0;
 }
 
 .article__back {

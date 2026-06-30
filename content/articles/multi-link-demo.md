@@ -1,6 +1,7 @@
 ---
 title: 多链接示例
 date: 2026-06-30
+cover: /covers/abstract-warm.png
 links:
   - label: GitHub
     url: https://github.com/SomeoneHX

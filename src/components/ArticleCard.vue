@@ -1,8 +1,12 @@
 <template>
   <router-link :to="`/blog/${article.slug}/`" custom v-slot="{ href, navigate }">
     <a :href="href" class="card" @click="handleCardClick($event, navigate)">
-      <img v-if="article.cover" :src="article.cover" alt="" class="card__cover" />
-      <div v-else class="card__cover card__cover--text">{{ article.title }}</div>
+      <div class="card__cover-wrap">
+        <img v-if="article.cover" :src="article.cover" alt="" class="card__cover" />
+        <div v-else class="card__cover card__cover--fallback" />
+        <div class="card__cover-overlay" />
+        <h3 class="card__cover-title">{{ article.title }}</h3>
+      </div>
       <span
         v-if="article.links?.length"
         class="card__ext-link"

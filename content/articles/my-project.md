@@ -1,6 +1,7 @@
 ---
 title: 我的开源项目
 date: 2026-06-28
+cover: /covers/code-green.png
 links:
   - label: GitHub
     url: https://github.com/SomeoneHX

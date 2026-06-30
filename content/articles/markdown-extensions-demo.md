@@ -1,6 +1,7 @@
 ---
 title: Markdown 扩展语法展示
 date: 2026-06-30
+cover: /covers/glass-blue.png
 tags: [测试]
 description: 展示代码块高亮、提示框、对齐排版等扩展语法功能
 published: true
