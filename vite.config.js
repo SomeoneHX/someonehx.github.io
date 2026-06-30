@@ -17,7 +17,7 @@ export default defineConfig({
       const { articles, tagsIndex, categoriesIndex, seriesIndex } =
         JSON.parse(readFileSync(contentPath, 'utf-8'))
 
-      const routes = ['/', '/blog/']
+      const routes = ['/', '/blog/', '/tags/']
       for (const a of articles) routes.push(`/blog/${a.slug}/`)
       for (const t of Object.keys(tagsIndex)) routes.push(`/tags/${t}/`)
       for (const c of Object.keys(categoriesIndex)) routes.push(`/categories/${c}/`)

@@ -11,6 +11,10 @@
           <VIcon icon="mdi:code-braces" width="16" class="navbar__link-icon" />
           项目
         </router-link>
+        <router-link to="/tags/" class="navbar__link">
+          <VIcon icon="mdi:tag-outline" width="16" class="navbar__link-icon" />
+          标签
+        </router-link>
       </div>
     </div>
   </nav>
