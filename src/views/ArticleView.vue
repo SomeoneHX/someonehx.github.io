@@ -23,18 +23,21 @@
         </div>
       </header>
 
-      <a
-        v-if="article?.link"
-        :href="article.link"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="article__visit-btn"
-      >
-        <VIcon icon="mdi:open-in-new" width="16" />
-        {{ article.linkLabel || '打开链接' }}
-      </a>
+        <div v-if="article?.links?.length" class="article__links">
+          <a
+            v-for="link in article.links"
+            :key="link.url"
+            :href="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="article__visit-btn"
+          >
+            <VIcon icon="mdi:open-in-new" width="16" />
+            {{ link.label }}
+          </a>
+        </div>
 
-      <DynamicContent
+        <DynamicContent
         v-if="article"
         :html="article.html"
         class="article__body"

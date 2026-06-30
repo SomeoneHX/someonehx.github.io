@@ -20,6 +20,11 @@ function build() {
 
     const slug = data.slug || basename(file, '.md')
     const html = md.render(content)
+    const links = data.links && data.links.length
+      ? data.links.map(l => ({ label: l.label || '打开链接', url: l.url }))
+      : data.link
+        ? [{ label: data.linkLabel || '打开链接', url: data.link }]
+        : []
     const article = {
       slug,
       title: data.title || slug,
@@ -28,8 +33,7 @@ function build() {
       series: data.series || null,
       seriesOrder: data.seriesOrder || null,
       description: data.description || '',
-      link: data.link || null,
-      linkLabel: data.linkLabel || null,
+      links,
       html,
     }
     articles.push(article)

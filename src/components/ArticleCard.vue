@@ -2,9 +2,9 @@
   <router-link :to="`/blog/${article.slug}/`" custom v-slot="{ href, navigate }">
     <a :href="href" class="card" @click="handleCardClick($event, navigate)">
       <span
-        v-if="article.link"
+        v-if="article.links?.length"
         class="card__ext-link"
-        @click.stop.prevent="openExternalLink(article.link)"
+        @click.stop.prevent="openExternalLink(article.links[0].url)"
       >
         <VIcon icon="mdi:open-in-new" width="14" class="card__ext-icon" />
       </span>

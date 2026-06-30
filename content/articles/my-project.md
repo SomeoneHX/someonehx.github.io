@@ -1,8 +1,9 @@
 ---
 title: 我的开源项目
 date: 2026-06-28
-link: https://github.com/SomeoneHX
-linkLabel: 访问 GitHub
+links:
+  - label: GitHub
+    url: https://github.com/SomeoneHX
 description: 一个很有意思的开源项目
 tags: [项目]
 published: true
