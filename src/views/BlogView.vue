@@ -9,7 +9,7 @@
           </h1>
           <button class="blog__clear" @click="goBack">
             <VIcon icon="mdi:arrow-left" width="14" class="blog__clear-icon" />
-            {{ route.params.tag ? '全部标签' : route.params.series ? '全部文章' : '返回' }}
+            {{ route.params.tag ? '全部标签' : '返回' }}
           </button>
         </template>
         <template v-else>
