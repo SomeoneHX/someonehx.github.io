@@ -1,6 +1,10 @@
 <template>
   <article ref="rootRef" class="article" :style="flipStyle">
     <div class="container">
+      <button class="article__back" @click="goBack">
+        <VIcon icon="mdi:arrow-left" width="14" />
+        返回
+      </button>
       <header class="article__header">
         <h1 class="article__title">{{ article?.title }}</h1>
         <div class="article__meta">
@@ -47,12 +51,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import DynamicContent from '@/components/DynamicContent.vue'
 import { takeCardRect } from '@/utils/cardStore'
 import data from '@/generated/content.json'
 
 const route = useRoute()
+const router = useRouter()
 const rootRef = ref(null)
 const flipStyle = ref(null)
 const rect = takeCardRect()
@@ -123,9 +128,35 @@ function formatDate(date) {
     day: 'numeric',
   })
 }
+
+function goBack() {
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push('/blog/')
+  }
+}
 </script>
 
 <style scoped>
+.article__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-lg);
+  font-size: var(--text-sm);
+  color: var(--color-gray-500);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+
+.article__back:hover {
+  color: var(--color-accent);
+}
+
 .article__header {
   padding: var(--space-xl) 0 var(--space-xl);
   border-bottom: 1px solid var(--color-gray-200);
