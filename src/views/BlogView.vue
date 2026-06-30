@@ -48,7 +48,6 @@ function goToTag(tag) {
 
 const filterLabel = computed(() => {
   if (route.params.tag) return `标签: ${route.params.tag}`
-  if (route.params.category) return `分类: ${route.params.category}`
   if (route.params.series) return `系列: ${route.params.series}`
   return ''
 })
@@ -59,14 +58,11 @@ const filteredArticles = computed(() => {
   if (route.params.tag && data.tagsIndex[route.params.tag]) {
     data.tagsIndex[route.params.tag].forEach(s => slugSet.add(s))
   }
-  if (route.params.category && data.categoriesIndex[route.params.category]) {
-    data.categoriesIndex[route.params.category].forEach(s => slugSet.add(s))
-  }
   if (route.params.series && data.seriesIndex[route.params.series]) {
     data.seriesIndex[route.params.series].forEach(s => slugSet.add(s))
   }
 
-  const hasFilter = route.params.tag || route.params.category || route.params.series
+  const hasFilter = route.params.tag || route.params.series
   if (hasFilter) {
     return data.articles.filter(a => slugSet.has(a.slug))
   }

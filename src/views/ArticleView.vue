@@ -12,10 +12,6 @@
             <VIcon icon="mdi:calendar-outline" width="14" class="article__meta-icon" />
             {{ formatDate(article.date) }}
           </time>
-          <span v-if="article?.category" class="article__category">
-            <VIcon icon="mdi:folder-outline" width="14" class="article__meta-icon" />
-            {{ article.category }}
-          </span>
         </div>
         <div v-if="article?.tags?.length" class="article__tags">
           <router-link
@@ -181,8 +177,7 @@ function goBack() {
   margin-bottom: var(--space-md);
 }
 
-.article__meta time,
-.article__category {
+.article__meta time {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
@@ -190,10 +185,6 @@ function goBack() {
 
 .article__meta-icon {
   flex-shrink: 0;
-}
-
-.article__category {
-  color: var(--color-gray-400);
 }
 
 .article__tags {

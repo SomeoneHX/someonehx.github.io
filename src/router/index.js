@@ -9,7 +9,6 @@ const routes = [
   { path: '/blog/:slug/', name: 'Article', component: ArticleView },
   { path: '/tags/', name: 'Tags', component: TagsView },
   { path: '/tags/:tag/', name: 'Tag', component: BlogView },
-  { path: '/categories/:category/', name: 'Category', component: BlogView },
   { path: '/series/:series/', name: 'Series', component: BlogView },
 ]
 

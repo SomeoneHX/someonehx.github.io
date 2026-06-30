@@ -5,7 +5,6 @@ link: https://github.com/SomeoneHX
 linkLabel: 访问 GitHub
 description: 一个很有意思的开源项目
 tags: [项目]
-category: projects
 published: true
 ---
 
