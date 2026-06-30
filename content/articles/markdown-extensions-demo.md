@@ -87,8 +87,6 @@ but with line numbers enabled
 内层错误，展示无限层级嵌套能力
 :::
 
-:::
-
 ## 对齐排版
 
 ### 居中
