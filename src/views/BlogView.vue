@@ -7,9 +7,9 @@
             <VIcon icon="mdi:tag-outline" width="22" class="blog__title-icon" />
             {{ filterLabel }}
           </h1>
-          <router-link to="/blog/" class="blog__clear">
+          <router-link :to="route.params.tag ? '/tags/' : '/blog/'" class="blog__clear">
             <VIcon icon="mdi:arrow-left" width="14" class="blog__clear-icon" />
-            全部文章
+            {{ route.params.tag ? '全部标签' : '全部文章' }}
           </router-link>
         </template>
         <template v-else>
