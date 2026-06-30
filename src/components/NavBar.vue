@@ -30,9 +30,10 @@
   z-index: 100;
   height: var(--nav-height);
   flex-shrink: 0;
-  background: var(--color-white);
+  background: rgba(255, 255, 255, 0.8);
   border-bottom: 1px solid var(--color-gray-200);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .navbar__inner {
