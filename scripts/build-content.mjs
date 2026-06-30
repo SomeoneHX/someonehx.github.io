@@ -1,13 +1,36 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { resolve, dirname, join, basename } from 'path'
 import matter from 'gray-matter'
-import MarkdownIt from 'markdown-it'
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import remarkGfm from 'remark-gfm'
+import remarkDirective from 'remark-directive'
+import remarkContainer from './remark-container.mjs'
+import remarkCodeMeta from './remark-code-meta.mjs'
+import remarkRehype from 'remark-rehype'
+import rehypeRaw from 'rehype-raw'
+import rehypePrism from 'rehype-prism-plus'
+import rehypeKatex from 'rehype-katex'
+import rehypeStringify from 'rehype-stringify'
+import rehypeDetailsSummary from './rehype-details-summary.mjs'
 
-const md = new MarkdownIt({ html: true })
+const processor = unified()
+  .use(remarkParse)
+  .use(remarkGfm)
+  .use(remarkDirective)
+  .use(remarkContainer)
+  .use(remarkCodeMeta)
+  .use(remarkRehype, { allowDangerousHtml: true })
+  .use(rehypeRaw)
+  .use(rehypePrism)
+  .use(rehypeKatex)
+  .use(rehypeDetailsSummary)
+  .use(rehypeStringify)
+
 const articlesDir = resolve('content/articles')
 const outFile = resolve('src/generated/content.json')
 
-function build() {
+async function build() {
   const files = readdirSync(articlesDir).filter(f => f.endsWith('.md'))
   const articles = []
   const tagsIndex = {}
@@ -19,7 +42,8 @@ function build() {
     if (data.published === false) continue
 
     const slug = data.slug || basename(file, '.md')
-    const html = md.render(content)
+    const result = await processor.process(content)
+    const html = String(result)
     const links = data.links && data.links.length
       ? data.links.map(l => ({ label: l.label || '打开链接', url: l.url }))
       : data.link

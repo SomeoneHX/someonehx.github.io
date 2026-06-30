@@ -10,6 +10,18 @@
   },
   "dependencies": {
     "@iconify/vue": "^5.0.1",
+    "hastscript": "^9.0.1",
+    "katex": "^0.17.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-prism-plus": "^2.0.2",
+    "rehype-raw": "^7.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-directive": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0",
     "vue": "^3.5",
     "vue-router": "^4.5"
   },
