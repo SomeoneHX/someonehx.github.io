@@ -24,10 +24,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-card-bg);
+  background: var(--color-accent);
   font-size: var(--text-2xl);
   font-weight: 700;
-  color: var(--color-gray-400);
+  color: var(--color-white);
   text-align: center;
   padding: var(--space-md);
 }
