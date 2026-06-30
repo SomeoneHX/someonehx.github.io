@@ -1,10 +1,41 @@
 <template>
-  <div class="dynamic-content" v-html="html"></div>
+  <div ref="root" class="dynamic-content" v-html="html"></div>
+  <ImageViewer :src="viewerSrc" :alt="viewerAlt" @close="viewerSrc = ''" />
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+import ImageViewer from './ImageViewer.vue'
+
 defineProps({
   html: { type: String, required: true },
+})
+
+const root = ref(null)
+const viewerSrc = ref('')
+const viewerAlt = ref('')
+
+function onImageClick(e) {
+  const img = e.target.closest('img')
+  if (!img || img.closest('.bilibili-embed')) return
+  viewerSrc.value = img.currentSrc || img.src
+  viewerAlt.value = img.alt || ''
+}
+
+function onKeydown(e) {
+  if (e.key === 'Escape' && viewerSrc.value) {
+    viewerSrc.value = ''
+  }
+}
+
+onMounted(() => {
+  root.value?.addEventListener('click', onImageClick)
+  document.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  root.value?.removeEventListener('click', onImageClick)
+  document.removeEventListener('keydown', onKeydown)
 })
 </script>
 
