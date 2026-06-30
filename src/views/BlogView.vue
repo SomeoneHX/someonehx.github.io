@@ -7,9 +7,9 @@
             <VIcon icon="mdi:tag-outline" width="22" class="blog__title-icon" />
             {{ filterLabel }}
           </h1>
-          <router-link :to="route.params.tag ? '/tags/' : '/blog/'" class="blog__clear">
+          <router-link to="/tags/" class="blog__clear">
             <VIcon icon="mdi:arrow-left" width="14" class="blog__clear-icon" />
-            {{ route.params.tag ? '全部标签' : '全部文章' }}
+            全部标签
           </router-link>
         </template>
         <template v-else>
@@ -48,23 +48,14 @@ function goToTag(tag) {
 
 const filterLabel = computed(() => {
   if (route.params.tag) return `标签: ${route.params.tag}`
-  if (route.params.series) return `系列: ${route.params.series}`
   return ''
 })
 
 const filteredArticles = computed(() => {
-  const slugSet = new Set([''])
-
-  if (route.params.tag && data.tagsIndex[route.params.tag]) {
-    data.tagsIndex[route.params.tag].forEach(s => slugSet.add(s))
-  }
-  if (route.params.series && data.seriesIndex[route.params.series]) {
-    data.seriesIndex[route.params.series].forEach(s => slugSet.add(s))
-  }
-
-  const hasFilter = route.params.tag || route.params.series
-  if (hasFilter) {
-    return data.articles.filter(a => slugSet.has(a.slug))
+  const tag = route.params.tag
+  if (tag && data.tagsIndex[tag]) {
+    const slugs = new Set(data.tagsIndex[tag])
+    return data.articles.filter(a => slugs.has(a.slug))
   }
   return data.articles
 })

@@ -14,13 +14,12 @@ export default defineConfig({
     script: 'async',
     includedRoutes: async () => {
       const contentPath = resolve(__dirname, 'src/generated/content.json')
-      const { articles, tagsIndex, seriesIndex } =
+      const { articles, tagsIndex } =
         JSON.parse(readFileSync(contentPath, 'utf-8'))
 
       const routes = ['/', '/blog/', '/tags/']
       for (const a of articles) routes.push(`/blog/${a.slug}/`)
       for (const t of Object.keys(tagsIndex)) routes.push(`/tags/${t}/`)
-      for (const s of Object.keys(seriesIndex)) routes.push(`/series/${s}/`)
       return routes
     },
   },

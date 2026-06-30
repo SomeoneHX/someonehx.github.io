@@ -38,7 +38,6 @@ async function build() {
   const files = readdirSync(articlesDir).filter(f => f.endsWith('.md'))
   const articles = []
   const tagsIndex = {}
-  const seriesIndex = {}
 
   for (const file of files) {
     const raw = readFileSync(join(articlesDir, file), 'utf-8')
@@ -58,8 +57,6 @@ async function build() {
       title: data.title || slug,
       date: data.date || null,
       tags: data.tags || [],
-      series: data.series || null,
-      seriesOrder: data.seriesOrder || null,
       description: data.description || '',
       links,
       html,
@@ -70,15 +67,11 @@ async function build() {
       if (!tagsIndex[tag]) tagsIndex[tag] = []
       tagsIndex[tag].push(slug)
     }
-    if (article.series) {
-      if (!seriesIndex[article.series]) seriesIndex[article.series] = []
-      seriesIndex[article.series].push(slug)
-    }
   }
 
   articles.sort((a, b) => new Date(b.date) - new Date(a.date))
 
-  const result = { articles, tagsIndex, seriesIndex }
+  const result = { articles, tagsIndex }
   mkdirSync(dirname(outFile), { recursive: true })
   writeFileSync(outFile, JSON.stringify(result, null, 2), 'utf-8')
   console.log(`Built ${articles.length} articles → ${outFile}`)
