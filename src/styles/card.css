@@ -20,6 +20,18 @@
   display: block;
 }
 
+.card__cover--text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-card-bg);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-gray-400);
+  text-align: center;
+  padding: var(--space-md);
+}
+
 .card__content {
   padding: var(--space-md) var(--space-lg) 0;
 }

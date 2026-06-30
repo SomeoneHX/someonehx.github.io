@@ -2,7 +2,7 @@
   <router-link :to="`/blog/${article.slug}/`" custom v-slot="{ href, navigate }">
     <a :href="href" class="card" @click="handleCardClick($event, navigate)">
       <img v-if="article.cover" :src="article.cover" alt="" class="card__cover" />
-      <div v-else class="card__cover" :style="{ background: coverGradient(article.slug) }" />
+      <div v-else class="card__cover card__cover--text">{{ article.title }}</div>
       <span
         v-if="article.links?.length"
         class="card__ext-link"
@@ -11,7 +11,6 @@
         <VIcon icon="mdi:open-in-new" width="14" class="card__ext-icon" />
       </span>
       <div class="card__content">
-      <h3 class="card__title">{{ article.title }}</h3>
       <div class="card__meta">
         <VIcon icon="mdi:calendar-outline" width="14" class="card__meta-icon" />
         {{ formatDate(article.date) }}
@@ -32,7 +31,6 @@
 
 <script setup>
 import { saveCardRect } from '@/utils/cardStore'
-import { coverGradient } from '@/utils/gradient'
 
 defineProps({
   article: { type: Object, required: true },
