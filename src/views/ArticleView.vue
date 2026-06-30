@@ -65,7 +65,8 @@ if (rect) {
   const computedStyle = getComputedStyle(document.documentElement)
   const navHeight = parseFloat(computedStyle.getPropertyValue('--nav-height')) || 56
   const radiusMd = computedStyle.getPropertyValue('--radius-md').trim() || '12px'
-  const shadowMd = '0 4px 16px rgba(0, 0, 0, 0.08)'
+  const cardBg = computedStyle.getPropertyValue('--color-card-bg').trim() || '#ffffff'
+  const shadowMd = computedStyle.getPropertyValue('--shadow-md').trim() || '0 4px 16px rgba(0, 0, 0, 0.08)'
 
   const finalW = window.innerWidth
   const finalH = window.innerHeight - navHeight
@@ -77,7 +78,7 @@ if (rect) {
   flipStyle.value = {
     transformOrigin: '0 0',
     transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
-    background: '#ffffff',
+    background: cardBg,
     borderRadius: radiusMd,
     boxShadow: shadowMd,
     overflow: 'hidden',
@@ -96,7 +97,7 @@ if (rect) {
         {
           transform: startTransform,
           borderRadius: radiusMd,
-          background: '#ffffff',
+          background: cardBg,
         },
         {
           transform: 'translate(0, 0) scale(1, 1)',

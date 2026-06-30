@@ -41,7 +41,111 @@ onUnmounted(() => {
 
 <style>
 @import 'katex/dist/katex.css';
-@import 'prismjs/themes/prism.css';
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: var(--prism-text);
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 1em;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+  tab-size: 4;
+  hyphens: none;
+}
+
+pre[class*="language-"] {
+  padding: 1em;
+  margin: .5em 0;
+  overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+  background: var(--prism-bg);
+}
+
+:not(pre) > code[class*="language-"] {
+  padding: .1em;
+  border-radius: .3em;
+  white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--prism-comment);
+}
+
+.token.punctuation {
+  color: var(--prism-punctuation);
+}
+
+.token.namespace {
+  opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: var(--prism-property);
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: var(--prism-selector);
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: var(--prism-operator);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: var(--prism-keyword);
+}
+
+.token.function,
+.token.class-name {
+  color: var(--prism-function);
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: var(--prism-regex);
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
 
 .dynamic-content h1,
 .dynamic-content h2,
@@ -86,7 +190,7 @@ onUnmounted(() => {
 }
 
 .dynamic-content pre {
-  background: var(--color-gray-100);
+  background: var(--prism-bg);
   padding: 0;
   margin-bottom: var(--space-md);
   overflow-x: auto;
@@ -121,7 +225,7 @@ onUnmounted(() => {
 }
 
 .dynamic-content .highlight-line {
-  background: var(--color-gray-200);
+  background: var(--prism-highlight-bg);
   margin: 0 calc(-1 * var(--space-md));
   padding: 0 var(--space-md);
 }

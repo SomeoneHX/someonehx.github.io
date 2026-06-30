@@ -15,12 +15,20 @@
           <VIcon icon="mdi:tag-outline" width="16" class="navbar__link-icon" />
           标签
         </router-link>
+        <button class="navbar__theme-btn" @click="toggleDarkMode" :title="isDark ? '切换亮色模式' : '切换深色模式'">
+          <VIcon :icon="isDark ? 'mdi:white-balance-sunny' : 'mdi:moon-waning-crescent'" width="16" />
+        </button>
       </div>
     </div>
   </nav>
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+import { useDarkMode } from '@/composables/useDarkMode'
+
+const { isDark, initDarkMode, toggleDarkMode } = useDarkMode()
+onMounted(initDarkMode)
 </script>
 
 <style scoped>
@@ -30,7 +38,7 @@
   z-index: 100;
   height: var(--nav-height);
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--color-navbar-bg);
   border-bottom: 1px solid var(--color-gray-200);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -75,5 +83,20 @@
 
 .navbar__link-icon {
   flex-shrink: 0;
+}
+
+.navbar__theme-btn {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-gray-500);
+  transition: color var(--transition-fast);
+  padding: 0;
+}
+
+.navbar__theme-btn:hover {
+  color: var(--color-accent);
 }
 </style>

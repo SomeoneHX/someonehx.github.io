@@ -71,7 +71,7 @@ function goToTag(tag) {
   position: sticky;
   top: var(--nav-height);
   z-index: 10;
-  background: var(--color-white);
+  background: var(--color-surface);
 }
 
 .drawer__edge {
