@@ -1,59 +1,54 @@
 <template>
   <article ref="rootRef" class="article" :style="flipStyle">
     <div class="container">
-      <button class="article__back" @click="goBack">
-        <VIcon icon="mdi:arrow-left" width="14" />
-        返回
-      </button>
-      <header class="article__header">
-        <h1 class="article__title">{{ article?.title }}</h1>
-        <div class="article__meta">
-          <time v-if="article?.date" :datetime="article.date">
-            <VIcon icon="mdi:calendar-outline" width="14" class="article__meta-icon" />
-            {{ formatDate(article.date) }}
-          </time>
+      <header v-if="article" class="article__header" :class="{ 'article__header--hero': article.cover }">
+        <div v-if="article.cover" class="article__header-bg">
+          <img :src="article.cover" alt="" class="article__header-bg-img" />
+          <div class="article__header-overlay" />
         </div>
-        <div v-if="article?.tags?.length" class="article__tags">
-          <router-link
-            v-for="tag in article.tags"
-            :key="tag"
-            :to="`/tags/${tag}/`"
-            class="article__tag"
-          >{{ tag }}</router-link>
-        </div>
-        <div v-if="article?.links?.length" class="article__links">
-          <a
-            v-for="link in article.links"
-            :key="link.url"
-            :href="link.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="article__visit-btn"
-          >
-            <VIcon icon="mdi:open-in-new" width="16" />
-            {{ link.label }}
-          </a>
+        <div class="article__header-inner">
+          <button class="article__back" @click="goBack">
+            <VIcon icon="mdi:arrow-left" width="14" />
+            返回
+          </button>
+          <h1 class="article__title">{{ article.title }}</h1>
+          <div class="article__meta">
+            <time v-if="article.date" :datetime="article.date">
+              <VIcon icon="mdi:calendar-outline" width="14" class="article__meta-icon" />
+              {{ formatDate(article.date) }}
+            </time>
+          </div>
+          <div v-if="article.tags.length" class="article__tags">
+            <router-link
+              v-for="tag in article.tags"
+              :key="tag"
+              :to="`/tags/${tag}/`"
+              class="article__tag"
+            >{{ tag }}</router-link>
+          </div>
+          <div v-if="article.links.length" class="article__links">
+            <a
+              v-for="link in article.links"
+              :key="link.url"
+              :href="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="article__visit-btn"
+            >
+              <VIcon icon="mdi:open-in-new" width="16" />
+              {{ link.label }}
+            </a>
+          </div>
         </div>
       </header>
 
-      <div v-if="article?.cover" class="article__cover">
-        <img :src="article.cover" alt="" class="article__cover-img" />
-      </div>
-      <div v-else-if="article" class="article__cover">
-        <div class="article__cover-img" :style="{ background: coverGradient(article.slug) }" />
-      </div>
-
-      <DynamicContent
-        v-if="article"
-        :html="article.html"
-        class="article__body"
-      />
-
-      <ClientOnly v-if="article">
-        <GiscusView :term="route.path" />
-      </ClientOnly>
-
-      <p v-else class="article__not-found">文章未找到</p>
+      <p v-if="!article" class="article__not-found">文章未找到</p>
+      <template v-else>
+        <DynamicContent :html="article.html" class="article__body" />
+        <ClientOnly>
+          <GiscusView :term="route.path" />
+        </ClientOnly>
+      </template>
     </div>
   </article>
 </template>
@@ -64,7 +59,6 @@ import { useRoute, useRouter } from 'vue-router'
 import DynamicContent from '@/components/DynamicContent.vue'
 import GiscusView from '@/components/GiscusView.vue'
 import { takeCardRect } from '@/utils/cardStore'
-import { coverGradient } from '@/utils/gradient'
 import data from '@/generated/content.json'
 
 const route = useRoute()
@@ -152,11 +146,50 @@ function goBack() {
 </script>
 
 <style scoped>
+.article__header {
+  padding: var(--space-xl) 0 var(--space-xl);
+  border-bottom: 1px solid var(--color-gray-200);
+  margin-bottom: var(--space-xl);
+}
+
+.article__header--hero {
+  position: relative;
+  border-bottom: none;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  padding: 0;
+}
+
+.article__header-bg {
+  position: absolute;
+  inset: 0;
+}
+
+.article__header-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.45) blur(6px);
+  transform: scale(1.1);
+}
+
+.article__header-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.6));
+}
+
+.article__header-inner {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-2xl) var(--space-lg);
+}
+
 .article__back {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  margin-top: var(--space-lg);
+  margin-bottom: var(--space-lg);
   font-size: var(--text-sm);
   color: var(--color-gray-500);
   background: none;
@@ -166,14 +199,16 @@ function goBack() {
   transition: color var(--transition-fast);
 }
 
+.article__header--hero .article__back {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .article__back:hover {
   color: var(--color-accent);
 }
 
-.article__header {
-  padding: var(--space-xl) 0 var(--space-xl);
-  border-bottom: 1px solid var(--color-gray-200);
-  margin-bottom: var(--space-xl);
+.article__header--hero .article__back:hover {
+  color: #fff;
 }
 
 .article__title {
@@ -184,6 +219,10 @@ function goBack() {
   margin-bottom: var(--space-md);
 }
 
+.article__header--hero .article__title {
+  color: #fff;
+}
+
 .article__meta {
   display: flex;
   flex-wrap: wrap;
@@ -192,6 +231,10 @@ function goBack() {
   font-size: var(--text-sm);
   color: var(--color-gray-500);
   margin-bottom: var(--space-md);
+}
+
+.article__header--hero .article__meta {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .article__meta time {
@@ -221,10 +264,21 @@ function goBack() {
               background var(--transition-fast);
 }
 
+.article__header--hero .article__tag {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .article__tag:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
   background: var(--color-accent-light);
+}
+
+.article__header--hero .article__tag:hover {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .article__not-found {
@@ -255,18 +309,5 @@ function goBack() {
 .article__visit-btn:hover {
   opacity: 0.85;
   color: #fff;
-}
-
-.article__cover {
-  margin-bottom: var(--space-xl);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.article__cover-img {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  display: block;
 }
 </style>
