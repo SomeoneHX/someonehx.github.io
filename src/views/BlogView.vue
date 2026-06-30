@@ -7,10 +7,10 @@
             <VIcon icon="mdi:tag-outline" width="22" class="blog__title-icon" />
             {{ filterLabel }}
           </h1>
-          <router-link :to="route.params.tag ? '/tags/' : '/blog/'" class="blog__clear">
+          <button class="blog__clear" @click="goBack">
             <VIcon icon="mdi:arrow-left" width="14" class="blog__clear-icon" />
-            {{ route.params.tag ? '全部标签' : '全部文章' }}
-          </router-link>
+            {{ route.params.tag ? '全部标签' : '返回' }}
+          </button>
         </template>
         <template v-else>
           <h1 class="blog__title">
@@ -44,6 +44,15 @@ const router = useRouter()
 
 function goToTag(tag) {
   router.push(`/tags/${tag}/`)
+}
+
+function goBack() {
+  const fallback = route.params.tag ? '/tags/' : '/blog/'
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push(fallback)
+  }
 }
 
 const filterLabel = computed(() => {
