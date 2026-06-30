@@ -36,6 +36,13 @@
         </div>
       </header>
 
+      <div v-if="article?.cover" class="article__cover">
+        <img :src="article.cover" alt="" class="article__cover-img" />
+      </div>
+      <div v-else-if="article" class="article__cover">
+        <div class="article__cover-img" :style="{ background: coverGradient(article.slug) }" />
+      </div>
+
       <DynamicContent
         v-if="article"
         :html="article.html"
@@ -57,6 +64,7 @@ import { useRoute, useRouter } from 'vue-router'
 import DynamicContent from '@/components/DynamicContent.vue'
 import GiscusView from '@/components/GiscusView.vue'
 import { takeCardRect } from '@/utils/cardStore'
+import { coverGradient } from '@/utils/gradient'
 import data from '@/generated/content.json'
 
 const route = useRoute()
@@ -247,5 +255,18 @@ function goBack() {
 .article__visit-btn:hover {
   opacity: 0.85;
   color: #fff;
+}
+
+.article__cover {
+  margin-bottom: var(--space-xl);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.article__cover-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
 }
 </style>

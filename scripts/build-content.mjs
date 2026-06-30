@@ -57,6 +57,7 @@ async function build() {
     const article = {
       slug,
       title: data.title || slug,
+      cover: data.cover || '',
       date: data.date || null,
       tags: data.tags || [],
       description: data.description || '',
