@@ -21,8 +21,6 @@
             class="article__tag"
           >{{ tag }}</router-link>
         </div>
-      </header>
-
         <div v-if="article?.links?.length" class="article__links">
           <a
             v-for="link in article.links"
@@ -36,8 +34,9 @@
             {{ link.label }}
           </a>
         </div>
+      </header>
 
-        <DynamicContent
+      <DynamicContent
         v-if="article"
         :html="article.html"
         class="article__body"
