@@ -219,11 +219,17 @@ function goBack() {
   text-align: center;
 }
 
+.article__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
 .article__visit-btn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  margin-bottom: var(--space-xl);
   padding: var(--space-sm) var(--space-lg);
   background: var(--color-accent);
   color: #fff;
