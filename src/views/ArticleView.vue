@@ -42,6 +42,10 @@
         class="article__body"
       />
 
+      <ClientOnly v-if="article">
+        <GiscusView :term="route.path" />
+      </ClientOnly>
+
       <p v-else class="article__not-found">文章未找到</p>
     </div>
   </article>
@@ -51,6 +55,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DynamicContent from '@/components/DynamicContent.vue'
+import GiscusView from '@/components/GiscusView.vue'
 import { takeCardRect } from '@/utils/cardStore'
 import data from '@/generated/content.json'
 
