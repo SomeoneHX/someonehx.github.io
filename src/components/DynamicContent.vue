@@ -28,13 +28,23 @@ function onKeydown(e) {
   }
 }
 
+function onBoxToggle(e) {
+  const header = e.target.closest('.box__header')
+  if (!header) return
+  const box = header.closest('.box')
+  if (!box) return
+  box.toggleAttribute('data-open')
+}
+
 onMounted(() => {
   root.value?.addEventListener('click', onImageClick)
+  root.value?.addEventListener('click', onBoxToggle)
   document.addEventListener('keydown', onKeydown)
 })
 
 onUnmounted(() => {
   root.value?.removeEventListener('click', onImageClick)
+  root.value?.removeEventListener('click', onBoxToggle)
   document.removeEventListener('keydown', onKeydown)
 })
 </script>
@@ -331,9 +341,9 @@ pre[class*="language-"] {
 .dynamic-content .box {
   border: 1px solid var(--color-gray-300);
   border-radius: 4px;
-  padding: var(--space-md);
   margin-bottom: var(--space-md);
   background: var(--color-gray-50);
+  overflow: hidden;
 }
 
 .dynamic-content .box--info {
@@ -353,10 +363,50 @@ pre[class*="language-"] {
   background: var(--color-gray-100);
 }
 
-.dynamic-content .box > summary {
+.dynamic-content .box__header {
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  user-select: none;
+  transition: background var(--transition-fast);
+}
+
+.dynamic-content .box__header:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.dynamic-content .box__header::after {
+  content: '';
+  margin-left: auto;
+  border: 4px solid transparent;
+  border-top-color: var(--color-gray-500);
+  transition: transform var(--transition-fast);
+}
+
+.dynamic-content .box[data-open] .box__header::after {
+  transform: rotate(180deg);
+}
+
+.dynamic-content .box__type {
   font-weight: 600;
-  margin-bottom: var(--space-sm);
+  font-size: var(--text-sm);
+}
+
+.dynamic-content .box__title {
+  color: var(--color-gray-600);
+  font-size: var(--text-sm);
+}
+
+.dynamic-content .box__body {
+  padding: var(--space-md);
+  border-top: 1px solid var(--color-gray-300);
+}
+
+.dynamic-content .box:not([data-open]) .box__body {
+  display: none;
+  border-top: none;
 }
 
 .dynamic-content .align-center {
@@ -365,18 +415,6 @@ pre[class*="language-"] {
 
 .dynamic-content .align-right {
   text-align: right;
-}
-
-.dynamic-content details.box[open] > summary {
-  margin-bottom: var(--space-sm);
-}
-
-.dynamic-content details.box:not([open]) > summary {
-  margin-bottom: 0;
-}
-
-.dynamic-content details.box > summary + * {
-  margin-top: var(--space-sm);
 }
 
 </style>
