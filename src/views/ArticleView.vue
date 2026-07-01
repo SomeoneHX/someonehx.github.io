@@ -348,6 +348,7 @@ function goBack() {
   margin: 0 auto;
   padding: 0 var(--space-md);
   justify-content: center;
+  align-items: flex-start;
 }
 
 .article__body-main {
