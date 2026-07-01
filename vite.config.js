@@ -20,6 +20,7 @@ export default defineConfig({
       const routes = ['/', '/blog/', '/tags/']
       for (const a of articles) routes.push(`/blog/${a.slug}/`)
       for (const t of Object.keys(tagsIndex)) routes.push(`/tags/${t}/`)
+      routes.push('/about/', '/archives/', '/friends/', '/guestbook/')
       return routes
     },
   },

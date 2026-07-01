@@ -15,6 +15,22 @@
           <VIcon icon="mdi:tag-outline" width="16" class="navbar__link-icon" />
           标签
         </router-link>
+        <router-link to="/about/" class="navbar__link">
+          <VIcon icon="mdi:account-outline" width="16" class="navbar__link-icon" />
+          关于
+        </router-link>
+        <router-link to="/archives/" class="navbar__link">
+          <VIcon icon="mdi:archive-outline" width="16" class="navbar__link-icon" />
+          归档
+        </router-link>
+        <router-link to="/friends/" class="navbar__link">
+          <VIcon icon="mdi:link-variant" width="16" class="navbar__link-icon" />
+          友链
+        </router-link>
+        <router-link to="/guestbook/" class="navbar__link">
+          <VIcon icon="mdi:message-text-outline" width="16" class="navbar__link-icon" />
+          留言
+        </router-link>
         <button class="navbar__search-btn" @click="openSearch" title="搜索">
           <VIcon icon="mdi:magnify" width="16" />
         </button>
