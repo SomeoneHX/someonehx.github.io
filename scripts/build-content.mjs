@@ -15,6 +15,7 @@ import rehypePrism from 'rehype-prism-plus'
 import rehypeKatex from 'rehype-katex'
 import rehypeStringify from 'rehype-stringify'
 import rehypeDetailsSummary from './rehype-details-summary.mjs'
+import rehypeHeading from './rehype-heading.mjs'
 
 const processor = unified()
   .use(remarkParse)
@@ -29,6 +30,7 @@ const processor = unified()
   .use(rehypeKatex)
   .use(rehypePrism)
   .use(rehypeDetailsSummary)
+  .use(rehypeHeading)
   .use(rehypeStringify)
 
 const articlesDir = resolve('content/articles')
@@ -47,6 +49,7 @@ async function build() {
     const slug = data.slug || basename(file, '.md')
     const result = await processor.process(content)
     const html = String(result)
+    const headings = result.data.headings || []
     const links = data.links && data.links.length
       ? data.links.map(l => ({ label: l.label || '打开链接', url: l.url }))
       : data.link
@@ -62,6 +65,7 @@ async function build() {
       tags: data.tags || [],
       description: data.description || '',
       links,
+      headings,
       html,
       text,
     }

@@ -149,7 +149,10 @@ pre[class*="language-"] {
 
 .dynamic-content h1,
 .dynamic-content h2,
-.dynamic-content h3 {
+.dynamic-content h3,
+.dynamic-content h4,
+.dynamic-content h5,
+.dynamic-content h6 {
   margin-top: var(--space-2xl);
   margin-bottom: var(--space-md);
   font-weight: 600;
@@ -159,6 +162,38 @@ pre[class*="language-"] {
 .dynamic-content h1 { font-size: var(--text-2xl); }
 .dynamic-content h2 { font-size: var(--text-xl); }
 .dynamic-content h3 { font-size: var(--text-lg); }
+.dynamic-content h4 { font-size: var(--text-base); }
+.dynamic-content h5 { font-size: var(--text-sm); }
+.dynamic-content h6 { font-size: var(--text-sm); }
+
+.dynamic-content h1[id],
+.dynamic-content h2[id],
+.dynamic-content h3[id],
+.dynamic-content h4[id],
+.dynamic-content h5[id],
+.dynamic-content h6[id] {
+  scroll-margin-top: calc(var(--nav-height) + 16px);
+}
+
+.dynamic-content h1[id]:hover,
+.dynamic-content h2[id]:hover,
+.dynamic-content h3[id]:hover,
+.dynamic-content h4[id]:hover,
+.dynamic-content h5[id]:hover,
+.dynamic-content h6[id]:hover {
+  cursor: pointer;
+}
+
+.dynamic-content h1[id]:hover::after,
+.dynamic-content h2[id]:hover::after,
+.dynamic-content h3[id]:hover::after,
+.dynamic-content h4[id]:hover::after,
+.dynamic-content h5[id]:hover::after,
+.dynamic-content h6[id]:hover::after {
+  content: ' #';
+  color: var(--color-gray-400);
+  font-weight: 400;
+}
 
 .dynamic-content p {
   margin-bottom: var(--space-md);

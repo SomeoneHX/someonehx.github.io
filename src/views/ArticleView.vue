@@ -1,57 +1,70 @@
 <template>
   <article ref="rootRef" class="article" :style="flipStyle">
-    <header v-if="article" class="article__header" :class="{ 'article__header--hero': article.cover }">
-      <div v-if="article.cover" class="article__header-bg">
-        <img :src="article.cover" alt="" class="article__header-bg-img" />
-        <div class="article__header-overlay" />
+    <template v-if="!article">
+      <div class="container">
+        <p class="article__not-found">文章未找到</p>
       </div>
-      <div class="article__header-inner">
-        <div class="container">
-          <button class="article__back" @click="goBack">
-            <VIcon icon="mdi:arrow-left" width="14" />
-            返回
-          </button>
-          <h1 class="article__title">{{ article.title }}</h1>
-          <div class="article__meta">
-            <time v-if="article.date" :datetime="article.date">
-              <VIcon icon="mdi:calendar-outline" width="14" class="article__meta-icon" />
-              {{ formatDate(article.date) }}
-            </time>
-          </div>
-          <div v-if="article.tags.length" class="article__tags">
-            <router-link
-              v-for="tag in article.tags"
-              :key="tag"
-              :to="`/tags/${tag}/`"
-              class="article__tag"
-            >{{ tag }}</router-link>
-          </div>
-          <div v-if="article.links.length" class="article__links">
-            <a
-              v-for="link in article.links"
-              :key="link.url"
-              :href="link.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="article__visit-btn"
-            >
-              <VIcon icon="mdi:open-in-new" width="16" />
-              {{ link.label }}
-            </a>
+    </template>
+    <template v-else>
+      <header class="article__header" :class="{ 'article__header--hero': article.cover }">
+        <div v-if="article.cover" class="article__header-bg">
+          <img :src="article.cover" alt="" class="article__header-bg-img" />
+          <div class="article__header-overlay" />
+        </div>
+        <div class="article__header-inner">
+          <div class="container">
+            <button class="article__back" @click="goBack">
+              <VIcon icon="mdi:arrow-left" width="14" />
+              返回
+            </button>
+            <h1 class="article__title">{{ article.title }}</h1>
+            <div class="article__meta">
+              <time v-if="article.date" :datetime="article.date">
+                <VIcon icon="mdi:calendar-outline" width="14" class="article__meta-icon" />
+                {{ formatDate(article.date) }}
+              </time>
+            </div>
+            <div v-if="article.tags.length" class="article__tags">
+              <router-link
+                v-for="tag in article.tags"
+                :key="tag"
+                :to="`/tags/${tag}/`"
+                class="article__tag"
+              >{{ tag }}</router-link>
+            </div>
+            <div v-if="article.links.length" class="article__links">
+              <a
+                v-for="link in article.links"
+                :key="link.url"
+                :href="link.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="article__visit-btn"
+              >
+                <VIcon icon="mdi:open-in-new" width="16" />
+                {{ link.label }}
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <div class="container">
-      <p v-if="!article" class="article__not-found">文章未找到</p>
-      <template v-else>
-        <DynamicContent :html="article.html" class="article__body" />
-        <ClientOnly>
-          <GiscusView :term="route.path" />
-        </ClientOnly>
-      </template>
-    </div>
+      <div class="article__body-wrapper">
+        <div class="article__body-layout">
+          <div class="article__body-main">
+            <DynamicContent :html="article.html" class="article__body" />
+          </div>
+          <aside v-if="article.headings?.length" class="article__toc-col">
+            <ArticleToc :headings="article.headings" />
+          </aside>
+        </div>
+        <div class="container">
+          <ClientOnly>
+            <GiscusView :term="route.path" />
+          </ClientOnly>
+        </div>
+      </div>
+    </template>
   </article>
 </template>
 
@@ -60,6 +73,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DynamicContent from '@/components/DynamicContent.vue'
 import GiscusView from '@/components/GiscusView.vue'
+import ArticleToc from '@/components/ArticleToc.vue'
 import { takeCardRect } from '@/utils/cardStore'
 import data from '@/generated/content.json'
 
@@ -321,5 +335,41 @@ function goBack() {
 .article__visit-btn:hover {
   opacity: 0.85;
   color: #fff;
+}
+
+.article__body-wrapper {
+  width: 100%;
+}
+
+.article__body-layout {
+  display: flex;
+  gap: var(--space-xl);
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  justify-content: center;
+}
+
+.article__body-main {
+  flex: 1;
+  min-width: 0;
+  max-width: 720px;
+}
+
+.article__toc-col {
+  display: none;
+  width: 200px;
+  flex-shrink: 0;
+  padding-top: var(--space-xs);
+  position: sticky;
+  top: calc(var(--nav-height) + 24px);
+  max-height: calc(100vh - var(--nav-height) - 48px);
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+  .article__toc-col {
+    display: block;
+  }
 }
 </style>
