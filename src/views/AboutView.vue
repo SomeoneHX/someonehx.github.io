@@ -66,6 +66,8 @@
 </template>
 
 <script setup>
+import { profileLinks as links } from '@/data/profile'
+
 const skills = [
   'C++', 'Python', 'Git', 'Linux', 'Windows', 'vibe'
 ]
@@ -76,11 +78,6 @@ const experiences = [
     title: 'CSP-J',
     description: '获得CSP-J二等奖。',
   },
-]
-
-const links = [
-  { label: 'GitHub', icon: 'mdi:github', url: 'https://github.com/SomeoneHX' },
-  { label: 'Luogu', icon: 'simple-icons:luogu', url: 'https://www.luogu.com.cn/user/1816684' },
 ]
 </script>
 
