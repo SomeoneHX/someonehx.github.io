@@ -22,7 +22,7 @@ export default defineConfig({
       for (const t of Object.keys(tagsIndex)) routes.push(`/tags/${t}/`)
       routes.push('/about/', '/archives/', '/friends/', '/guestbook/', '/toys/')
 
-      const TOY_SLUGS = ['base64']
+      const TOY_SLUGS = ['base64', 'markdown']
       for (const s of TOY_SLUGS) routes.push(`/toys/${s}/`)
       return routes
     },

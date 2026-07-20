@@ -37,6 +37,7 @@ const toy = computed(() => toysMap[route.params.slug] || null)
 
 const toolComponents = {
   base64: defineAsyncComponent(() => import('@/views/tools/Base64View.vue')),
+  markdown: defineAsyncComponent(() => import('@/views/tools/MarkdownView.vue')),
 }
 
 const toolComponent = computed(() => {
