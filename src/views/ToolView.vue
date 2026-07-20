@@ -16,7 +16,9 @@
           {{ toy.name }}
         </h1>
         <p class="tool__desc">{{ toy.description }}</p>
-        <component :is="toolComponent" />
+        <component v-if="toolComponent" :is="toolComponent" />
+        <iframe v-else-if="toy.html" :src="toy.html" class="tool__iframe" title="tool content" />
+        <p v-else class="tool__unsupported">该工具暂无可用实现</p>
       </div>
     </template>
   </article>
@@ -159,5 +161,18 @@ function goBack() {
   padding: var(--space-3xl) 0;
   color: var(--color-gray-400);
   text-align: center;
+}
+
+.tool__iframe {
+  width: 100%;
+  height: 500px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.tool__unsupported {
+  color: var(--color-gray-400);
+  font-size: var(--text-sm);
 }
 </style>

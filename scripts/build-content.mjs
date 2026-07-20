@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, copyFileSync, existsSync } from 'fs'
 import { resolve, dirname, join, basename } from 'path'
 import matter from 'gray-matter'
 import { unified } from 'unified'
@@ -83,6 +83,32 @@ async function build() {
   mkdirSync(dirname(outFile), { recursive: true })
   writeFileSync(outFile, JSON.stringify(result, null, 2), 'utf-8')
   console.log(`Built ${articles.length} articles → ${outFile}`)
+
+  const toolsDir = resolve('content/tools')
+  const toolsOut = resolve('src/generated/html-tools.json')
+  const toolsPublic = resolve('public/tools')
+
+  if (existsSync(toolsDir)) {
+    const htmlFiles = readdirSync(toolsDir).filter(f => f.endsWith('.html'))
+    const htmlTools = []
+
+    mkdirSync(toolsPublic, { recursive: true })
+
+    for (const file of htmlFiles) {
+      const slug = basename(file, '.html')
+      const raw = readFileSync(join(toolsDir, file), 'utf-8')
+      const titleMatch = raw.match(/<title[^>]*>([^<]*)<\/title>/i)
+      const name = titleMatch ? titleMatch[1].trim() : slug
+      const descMatch = raw.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i)
+      const description = descMatch ? descMatch[1].trim() : ''
+      copyFileSync(join(toolsDir, file), join(toolsPublic, file))
+      htmlTools.push({ slug, name, description })
+    }
+
+    mkdirSync(dirname(toolsOut), { recursive: true })
+    writeFileSync(toolsOut, JSON.stringify(htmlTools, null, 2), 'utf-8')
+    console.log(`Built ${htmlTools.length} HTML tools → ${toolsOut}`)
+  }
 }
 
 build()

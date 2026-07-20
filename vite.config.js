@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 
 export default defineConfig({
   plugins: [vue()],
@@ -22,8 +22,15 @@ export default defineConfig({
       for (const t of Object.keys(tagsIndex)) routes.push(`/tags/${t}/`)
       routes.push('/about/', '/archives/', '/friends/', '/guestbook/', '/toys/')
 
-      const TOY_SLUGS = ['base64', 'markdown']
-      for (const s of TOY_SLUGS) routes.push(`/toys/${s}/`)
+      const VUE_SLUGS = ['base64', 'markdown']
+      for (const s of VUE_SLUGS) routes.push(`/toys/${s}/`)
+
+      const htmlToolsPath = resolve(__dirname, 'src/generated/html-tools.json')
+      if (existsSync(htmlToolsPath)) {
+        const htmlTools = JSON.parse(readFileSync(htmlToolsPath, 'utf-8'))
+        for (const t of htmlTools) routes.push(`/toys/${t.slug}/`)
+      }
+
       return routes
     },
   },
