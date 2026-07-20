@@ -5,7 +5,7 @@
       <div class="navbar__links">
         <router-link to="/blog/" class="navbar__link">
           <VIcon icon="mdi:post-outline" width="16" class="navbar__link-icon" />
-          Blog
+          博客
         </router-link>
         <router-link to="/tags/%E9%A1%B9%E7%9B%AE/" class="navbar__link">
           <VIcon icon="mdi:code-braces" width="16" class="navbar__link-icon" />
@@ -30,6 +30,10 @@
         <router-link to="/guestbook/" class="navbar__link">
           <VIcon icon="mdi:message-text-outline" width="16" class="navbar__link-icon" />
           留言
+        </router-link>
+        <router-link to="/toys/" class="navbar__link">
+          <VIcon icon="mdi:toy-brick-outline" width="16" class="navbar__link-icon" />
+          工具箱
         </router-link>
         <button class="navbar__search-btn" @click="openSearch" title="搜索">
           <VIcon icon="mdi:magnify" width="16" />
@@ -90,6 +94,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   align-items: center;
   justify-content: space-between;
   height: 100%;
+  max-width: 900px;
 }
 
 .navbar__logo {

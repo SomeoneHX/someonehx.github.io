@@ -84,6 +84,15 @@ slug: custom-slug
 
 编辑 `src/components/NavBar.vue` 修改导航项。
 
+### 工具箱
+
+工具箱中的工具定义在 `src/data/toys.js`，每个工具有 slug、名称、图标、描述。新增工具需：
+
+1. 在 `src/data/toys.js` 中添加一条数据
+2. 在 `src/views/tools/` 下创建对应的 `.vue` 组件
+3. 在 `src/views/ToolView.vue` 的 `toolComponents` 映射表中注册
+4. 在 `vite.config.js` 的 `TOY_SLUGS` 数组中添加 slug
+
 ### 页脚
 
 编辑 `src/components/FooterBar.vue` 修改版权信息和链接。
@@ -98,6 +107,8 @@ slug: custom-slug
 | `/tags/:tag/` | BlogView | 按标签筛选 |
 | `/categories/:category/` | BlogView | 按分类筛选 |
 | `/series/:series/` | BlogView | 按系列筛选 |
+| `/toys/` | ToysView | 工具箱列表（2 列网格，无头图卡片） |
+| `/toys/:slug/` | ToolView | 工具详情页（带 FLIP 动画） |
 
 ## 项目架构
 
@@ -118,15 +129,23 @@ someonehx.github.io/
 │   ├── generated/              # gitignore，构建产物
 │   │   └── content.json        # 编译后的文章数据
 │   ├── views/
+│   ├── data/
+│   │   └── toys.js             # 工具箱工具数据定义
+│   ├── views/
 │   │   ├── HomeView.vue        # 主页
 │   │   ├── BlogView.vue        # 博客列表（带筛选）
-│   │   └── ArticleView.vue     # 文章详情
+│   │   ├── ArticleView.vue     # 文章详情
+│   │   ├── ToysView.vue        # 工具箱列表
+│   │   ├── ToolView.vue        # 工具详情（动态渲染 + FLIP）
+│   │   └── tools/              # 具体工具组件
+│   │       └── Base64View.vue  # Base64 编解码工具
 │   ├── components/
 │   │   ├── NavBar.vue          # 顶部导航栏
 │   │   ├── HeroBanner.vue      # Bing 每日一图（100vh）
 │   │   ├── DrawerSection.vue   # 滚动触发的抽屉布局
 │   │   ├── ProfileSection.vue  # 个人资料与外链
 │   │   ├── ArticleCard.vue     # 文章卡片（FLIP 动画）
+│   │   ├── ToyCard.vue         # 工具卡片（FLIP 动画，无头图）
 │   │   ├── DynamicContent.vue  # 安全渲染 HTML
 │   │   └── FooterBar.vue       # 页脚
 │   ├── styles/
@@ -135,7 +154,8 @@ someonehx.github.io/
 │   │   ├── global.css          # 全局布局样式
 │   │   └── card.css            # 卡片组件样式
 │   └── utils/
-│       └── cardStore.js        # FLIP 动画状态管理
+│       ├── cardStore.js        # 文章 FLIP 动画状态管理
+│       └── toyCardStore.js     # 工具 FLIP 动画状态管理
 ├── public/                     # 静态资源（favicon 等）
 └── .github/
     └── workflows/              # GitHub Actions 部署配置
