@@ -16,9 +16,7 @@
           {{ toy.name }}
         </h1>
         <p class="tool__desc">{{ toy.description }}</p>
-        <component v-if="toolComponent" :is="toolComponent" />
-        <iframe v-else-if="toy.html" :src="toy.html" class="tool__iframe" title="tool content" />
-        <p v-else class="tool__unsupported">该工具暂无可用实现</p>
+        <component :is="toolComponent" />
       </div>
     </template>
   </article>
@@ -28,6 +26,7 @@
 import { ref, computed, defineAsyncComponent, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toysMap } from '@/data/toys.js'
+import { toolLoaders } from '@/utils/toolModules'
 import { takeToyCardRect } from '@/utils/toyCardStore'
 
 const route = useRoute()
@@ -37,14 +36,10 @@ const flipStyle = ref(null)
 
 const toy = computed(() => toysMap[route.params.slug] || null)
 
-const toolComponents = {
-  base64: defineAsyncComponent(() => import('@/views/tools/Base64View.vue')),
-  markdown: defineAsyncComponent(() => import('@/views/tools/MarkdownView.vue')),
-}
-
 const toolComponent = computed(() => {
   if (!toy.value) return null
-  return toolComponents[toy.value.slug] || null
+  const loader = toolLoaders[toy.value.slug]
+  return loader ? defineAsyncComponent(loader) : null
 })
 
 const rect = takeToyCardRect()
@@ -161,18 +156,5 @@ function goBack() {
   padding: var(--space-3xl) 0;
   color: var(--color-gray-400);
   text-align: center;
-}
-
-.tool__iframe {
-  width: 100%;
-  height: 500px;
-  border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-md);
-  background: #fff;
-}
-
-.tool__unsupported {
-  color: var(--color-gray-400);
-  font-size: var(--text-sm);
 }
 </style>
