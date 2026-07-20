@@ -29,6 +29,6 @@ body {
 
 .grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, 290px);
   gap: var(--space-lg);
 }
