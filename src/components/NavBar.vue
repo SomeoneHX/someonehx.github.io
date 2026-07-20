@@ -94,7 +94,6 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   align-items: center;
   justify-content: space-between;
   height: 100%;
-  max-width: 900px;
 }
 
 .navbar__logo {
