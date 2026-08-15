@@ -24,14 +24,13 @@
           v-model="source"
           class="md-editor__textarea"
           placeholder="在此输入 Markdown..."
-          @input="onInput"
         ></textarea>
       </div>
       <div
         v-show="activeTab === 'preview' || activeTab === 'split'"
         class="md-editor__pane md-editor__pane--preview"
       >
-        <DynamicContent v-if="html" :html="html" />
+        <DynamicContent v-if="source" :markdown="source" />
         <p v-else class="md-editor__placeholder">预览将显示在此处</p>
       </div>
     </div>
@@ -39,31 +38,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import DynamicContent from '@/components/DynamicContent.vue'
-import { renderMarkdown } from '@/utils/markdown'
 
 const source = ref('')
-const html = ref('')
 const activeTab = ref('split')
-
-let debounceTimer = null
-
-function updatePreview() {
-  const text = source.value
-  if (!text) {
-    html.value = ''
-    return
-  }
-  renderMarkdown(text).then(result => {
-    html.value = result
-  })
-}
-
-function onInput() {
-  if (debounceTimer) clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(updatePreview, 300)
-}
 </script>
 
 <style scoped>

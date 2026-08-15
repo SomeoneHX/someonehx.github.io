@@ -10,7 +10,7 @@
 | 构建工具 | Vite 6 |
 | 静态生成 | vite-ssg 28 |
 | 路由 | vue-router 4 |
-| 内容处理 | gray-matter (frontmatter) + markdown-it (Markdown → HTML) |
+| 内容处理 | gray-matter (frontmatter) + 前端 Markdown 渲染 |
 | 图标 | @iconify/vue (Material Design Icons) |
 | 样式 | 纯手写 CSS — BEM 命名 + CSS 自定义属性 |
 | 部署 | GitHub Actions → GitHub Pages |
@@ -21,7 +21,7 @@
 git clone https://github.com/SomeoneHX/someonehx.github.io.git
 cd someonehx.github.io
 npm install
-npm run dev      # 启动开发服务器（Vite HMR）
+npm run dev      # 启动开发服务器（修改文章会自动重建并刷新页面）
 npm run build    # 构建：编译文章 → 预渲染全部路由 → 输出 dist/
 npm run preview  # 预览构建产物
 ```
@@ -118,7 +118,7 @@ someonehx.github.io/
 ├── vite.config.js              # Vite + vite-ssg 配置
 ├── package.json                # 依赖与脚本
 ├── scripts/
-│   └── build-content.mjs       # 构建脚本：Markdown → content.json
+│   └── build-content.mjs       # 构建脚本：整理文章元数据与 Markdown 原文
 ├── content/
 │   └── articles/               # 所有文章（.md 文件）
 ├── src/
@@ -146,7 +146,7 @@ someonehx.github.io/
 │   │   ├── ProfileSection.vue  # 个人资料与外链
 │   │   ├── ArticleCard.vue     # 文章卡片（FLIP 动画）
 │   │   ├── ToyCard.vue         # 工具卡片（FLIP 动画，无头图）
-│   │   ├── DynamicContent.vue  # 安全渲染 HTML
+│   │   ├── DynamicContent.vue  # 前端渲染 Markdown
 │   │   └── FooterBar.vue       # 页脚
 │   ├── styles/
 │   │   ├── reset.css           # CSS reset
@@ -168,7 +168,7 @@ content/articles/*.md
         │
         ▼ (scripts/build-content.mjs)
         │ gray-matter 解析 frontmatter
-        │ markdown-it 将 Markdown 渲染为 HTML
+        │ 将 Markdown 原文写入 content.json
         │ 过滤未发布的文章，按日期降序排序
         │ 建立标签 / 分类 / 系列索引
         ▼

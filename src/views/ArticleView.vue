@@ -52,10 +52,14 @@
       <div class="article__body-wrapper">
         <div class="article__body-layout">
           <div class="article__body-main">
-            <DynamicContent :html="article.html" class="article__body" />
+            <DynamicContent
+              :markdown="article.markdown"
+              class="article__body"
+              @rendered="headings = $event"
+            />
           </div>
-          <aside v-if="article.headings?.length" class="article__toc-col">
-            <ArticleToc :headings="article.headings" />
+          <aside v-if="headings.length" class="article__toc-col">
+            <ArticleToc :headings="headings" />
           </aside>
         </div>
         <div class="container">
@@ -81,6 +85,7 @@ const route = useRoute()
 const router = useRouter()
 const rootRef = ref(null)
 const flipStyle = ref(null)
+const headings = ref([])
 const rect = takeCardRect()
 
 if (rect) {

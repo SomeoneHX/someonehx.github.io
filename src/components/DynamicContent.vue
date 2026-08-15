@@ -1,19 +1,37 @@
 <template>
-  <div ref="root" class="dynamic-content" v-html="html"></div>
+  <div ref="root" class="dynamic-content" v-html="renderedHtml"></div>
   <ImageViewer :src="viewerSrc" :alt="viewerAlt" @close="viewerSrc = ''" />
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import ImageViewer from './ImageViewer.vue'
+import { renderMarkdownWithHeadings } from '@/utils/markdown'
 
-defineProps({
-  html: { type: String, required: true },
+const props = defineProps({
+  markdown: { type: String, required: true },
 })
+
+const emit = defineEmits(['rendered'])
 
 const root = ref(null)
 const viewerSrc = ref('')
 const viewerAlt = ref('')
+const renderedHtml = ref('')
+
+let renderVersion = 0
+
+watch(
+  () => props.markdown,
+  async (markdown) => {
+    const version = ++renderVersion
+    const result = await renderMarkdownWithHeadings(markdown)
+    if (version !== renderVersion) return
+    renderedHtml.value = result.html
+    emit('rendered', result.headings)
+  },
+  { immediate: true }
+)
 
 function onImageClick(e) {
   const img = e.target.closest('img')

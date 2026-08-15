@@ -34,3 +34,11 @@ export async function renderMarkdown(markdown) {
   const result = await processor.process(markdown)
   return String(result)
 }
+
+export async function renderMarkdownWithHeadings(markdown) {
+  const result = await processor.process(markdown)
+  return {
+    html: String(result),
+    headings: result.data.headings || [],
+  }
+}

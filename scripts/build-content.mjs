@@ -1,40 +1,20 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { resolve, dirname, join, basename } from 'path'
 import matter from 'gray-matter'
-import { unified } from 'unified'
-import remarkParse from 'remark-parse'
-import remarkMath from 'remark-math'
-import remarkGfm from 'remark-gfm'
-import remarkDirective from 'remark-directive'
-import remarkContainer from './remark-container.mjs'
-import remarkCodeMeta from './remark-code-meta.mjs'
-import remarkBilibili from './remark-bilibili.mjs'
-import remarkRehype from 'remark-rehype'
-import rehypeRaw from 'rehype-raw'
-import rehypePrism from 'rehype-prism-plus'
-import rehypeKatex from 'rehype-katex'
-import rehypeStringify from 'rehype-stringify'
-import rehypeDetailsSummary from './rehype-details-summary.mjs'
-import rehypeHeading from './rehype-heading.mjs'
-
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkMath)
-  .use(remarkGfm)
-  .use(remarkDirective)
-  .use(remarkContainer)
-  .use(remarkCodeMeta)
-  .use(remarkBilibili)
-  .use(remarkRehype, { allowDangerousHtml: true })
-  .use(rehypeRaw)
-  .use(rehypeKatex)
-  .use(rehypePrism)
-  .use(rehypeDetailsSummary)
-  .use(rehypeHeading)
-  .use(rehypeStringify)
 
 const articlesDir = resolve('content/articles')
 const outFile = resolve('src/generated/content.json')
+
+function toPlainText(markdown) {
+  return markdown
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]*>/g, '')
+    .replace(/[#>*_~|]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
 
 async function build() {
   const files = readdirSync(articlesDir).filter(f => f.endsWith('.md'))
@@ -47,16 +27,11 @@ async function build() {
     if (data.published === false) continue
 
     const slug = data.slug || basename(file, '.md')
-    const result = await processor.process(content)
-    const html = String(result)
-    const headings = result.data.headings || []
     const links = data.links && data.links.length
       ? data.links.map(l => ({ label: l.label || '打开链接', url: l.url }))
       : data.link
         ? [{ label: data.linkLabel || '打开链接', url: data.link }]
         : []
-    const text = html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
-
     const article = {
       slug,
       title: data.title || slug,
@@ -65,9 +40,8 @@ async function build() {
       tags: data.tags || [],
       description: data.description || '',
       links,
-      headings,
-      html,
-      text,
+      markdown: content,
+      text: toPlainText(content),
     }
     articles.push(article)
 
