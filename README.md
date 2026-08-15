@@ -22,7 +22,7 @@ git clone https://github.com/SomeoneHX/someonehx.github.io.git
 cd someonehx.github.io
 npm install
 npm run dev      # 启动开发服务器（修改文章会自动重建并刷新页面）
-npm run build    # 构建：编译文章 → 预渲染全部路由 → 输出 dist/
+npm run build    # 构建内容数据、预渲染全部路由，并输出 dist/
 npm run preview  # 预览构建产物
 ```
 
@@ -35,9 +35,6 @@ npm run preview  # 预览构建产物
 title: 文章标题
 date: 2026-06-21
 tags: [标签1, 标签2]
-category: 分类名
-series: 系列名称
-seriesOrder: 1
 description: 卡片上显示的简短摘要
 published: true
 slug: custom-slug
@@ -55,14 +52,15 @@ slug: custom-slug
 | `title` | 是 | 文章标题 |
 | `date` | 是 | 发布日期，ISO 格式 `YYYY-MM-DD` |
 | `tags` | 否 | 标签数组 |
-| `category` | 否 | 分类 |
-| `series` | 否 | 所属系列 |
-| `seriesOrder` | 否 | 在系列中的顺序 |
-| `description` | 否 | 卡片显示的摘要，不填则截取正文 |
+| `description` | 否 | 文章卡片显示的摘要 |
 | `published` | 否 | `false` 时为草稿，不会出现在站点上 |
 | `slug` | 否 | 自定义 URL，默认使用文件名 |
 
-写好后运行 `npm run build` 即可自动编译并纳入站点。
+开发时运行 `npm run dev`：保存、新增或删除文章后，内容数据会自动更新并刷新页面。部署前运行 `npm run build` 即可生成站点。
+
+### Markdown 渲染
+
+构建脚本只解析 frontmatter、生成搜索文本与标签索引，并将文章正文的原始 Markdown 写入 `src/generated/content.json`。文章页与 Markdown 编辑器均在浏览器端使用同一套渲染器处理 Markdown，因此目录、数学公式、GFM、代码高亮和扩展指令都会在前端生成。
 
 ## 自定义站点
 
@@ -90,8 +88,7 @@ slug: custom-slug
 
 1. 在 `src/data/toys.js` 中添加一条数据
 2. 在 `src/views/tools/` 下创建对应的 `.vue` 组件
-3. 在 `src/views/ToolView.vue` 的 `toolComponents` 映射表中注册
-4. 在 `vite.config.js` 的 `TOY_SLUGS` 数组中添加 slug
+3. 保证组件文件名与 slug 对应，例如 `example` 对应 `ExampleView.vue`；工具组件会自动加载，静态构建也会自动包含对应路由
 
 ### 页脚
 
@@ -105,8 +102,6 @@ slug: custom-slug
 | `/blog/` | BlogView | 文章列表（2 列网格） |
 | `/blog/:slug/` | ArticleView | 文章详情页（带 FLIP 动画） |
 | `/tags/:tag/` | BlogView | 按标签筛选 |
-| `/categories/:category/` | BlogView | 按分类筛选 |
-| `/series/:series/` | BlogView | 按系列筛选 |
 | `/toys/` | ToysView | 工具箱列表（2 列网格，无头图卡片） |
 | `/toys/:slug/` | ToolView | 工具详情页（带 FLIP 动画） |
 
@@ -118,7 +113,7 @@ someonehx.github.io/
 ├── vite.config.js              # Vite + vite-ssg 配置
 ├── package.json                # 依赖与脚本
 ├── scripts/
-│   └── build-content.mjs       # 构建脚本：整理文章元数据与 Markdown 原文
+│   └── build-content.mjs       # 构建文章元数据、搜索文本和 Markdown 原文
 ├── content/
 │   └── articles/               # 所有文章（.md 文件）
 ├── src/
@@ -170,7 +165,7 @@ content/articles/*.md
         │ gray-matter 解析 frontmatter
         │ 将 Markdown 原文写入 content.json
         │ 过滤未发布的文章，按日期降序排序
-        │ 建立标签 / 分类 / 系列索引
+        │ 建立标签索引
         ▼
 src/generated/content.json
         │
@@ -180,6 +175,8 @@ src/generated/content.json
         ▼
 dist/     ← 部署到 GitHub Pages
 ```
+
+浏览器访问文章页后，会读取内容数据中的 Markdown，并在前端渲染文章 HTML 与目录。
 
 ## 部署
 
