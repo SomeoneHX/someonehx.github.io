@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/build-content.mjs && vite",
-    "build": "node scripts/build-content.mjs && vite-ssg build",
+    "dev": "node scripts/build-content.mjs && node scripts/generate-site-files.mjs && vite",
+    "build": "node scripts/build-content.mjs && node scripts/generate-site-files.mjs && vite-ssg build",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -3,3 +3,5 @@ dist
 src/generated
 .DS_Store
 .workbuddy
+public/feed.xml
+public/sitemap.xml
