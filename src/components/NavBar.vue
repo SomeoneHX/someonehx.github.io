@@ -23,17 +23,9 @@
           <VIcon icon="mdi:archive-outline" width="16" class="navbar__link-icon" />
           归档
         </router-link>
-        <router-link to="/friends/" class="navbar__link">
-          <VIcon icon="mdi:link-variant" width="16" class="navbar__link-icon" />
-          友链
-        </router-link>
         <router-link to="/guestbook/" class="navbar__link">
           <VIcon icon="mdi:message-text-outline" width="16" class="navbar__link-icon" />
           留言
-        </router-link>
-        <router-link to="/toys/" class="navbar__link">
-          <VIcon icon="mdi:toy-brick-outline" width="16" class="navbar__link-icon" />
-          工具箱
         </router-link>
         <button class="navbar__search-btn" @click="openSearch" title="搜索">
           <VIcon icon="mdi:magnify" width="16" />
