@@ -33,7 +33,7 @@ const glowRef = ref(null)   /* 吸附辉光子层（仅 snap 态可见，中心�
 
 const RING = 26          /* 空闲态空心圆环外径（点击时缩为小实心点） */
 const LERP = 0.5         /* 浮点跟随阻尼：越大越跟手，0.5 有轻微触感 */
-const REVERT_MS = 200    /* 吸附移开后缩回圆点的时长（rAF 插值，实时追鼠标） */
+const REVERT_MS = 240    /* 吸附移开后缩回圆点的时长（rAF 插值，实时追鼠标） */
 const SNAP_PAD = 4       /* 无自带轮廓的文本目标：吸附框外扩量（px），轻微包裹即可 */
 const SNAP_RADIUS = 6    /* 无轮廓目标补圆角：与站内按钮圆角一致（--radius-sm: 6px） */
 const GLOW_LERP = 0.45   /* 吸附辉光跟随阻尼：0.45 贴手且带轻微柔滞 */
@@ -637,10 +637,10 @@ html.cfx-on .image-viewer img {
   border: 2px solid var(--cfx-ink);
   box-shadow: 0 0 0 1px var(--cfx-halo);
   transition:
-    transform 110ms ease-out,
-    background-color 110ms ease-out,
-    border-color 110ms ease-out,
-    box-shadow 110ms ease-out;
+    transform 80ms ease-out,
+    background-color 80ms ease-out,
+    border-color 80ms ease-out,
+    box-shadow 80ms ease-out;
   transform-origin: center;
 }
 
