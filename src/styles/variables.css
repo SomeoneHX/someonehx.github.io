@@ -76,6 +76,14 @@
   --prism-highlight-bg: #e5e5e5;
 }
 
+/* 窄屏导航拆两行：--nav-height = 首行 + tabs 行 */
+@media (max-width: 860px) {
+  :root {
+    --nav-height: 100px;
+    --nav-tabs-height: 44px;
+  }
+}
+
 [data-theme='dark'] {
   --color-gray-50: #1a1a1a;
   --color-gray-100: #2a2a2a;

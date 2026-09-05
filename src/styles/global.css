@@ -24,11 +24,22 @@ body {
 }
 
 .section {
-  padding: var(--space-2xl) 0;
+  /* 只声明垂直方向：与 .container 同元素使用时（如 .container.section）
+     不能再用 padding 简写，否则会覆盖 .container 的水平留白 */
+  padding-top: var(--space-2xl);
+  padding-bottom: var(--space-2xl);
 }
 
 .grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, 290px);
+  /* 至少 290px 一列，剩余空间由 1fr 吸收：桌面仍约 3 列近 290px，
+     窄屏单列则铺满内容区，标题与卡片自然左对齐且无右侧空洞 */
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: var(--space-lg);
+}
+
+/* 独立页面主体（博客/标签/归档等顶部大标题页）标题更贴近导航，
+   所有宽度一致；首页抽屉的 .section > .container 结构不受影响 */
+.container.section {
+  padding-top: var(--space-lg);
 }

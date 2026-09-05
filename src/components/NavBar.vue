@@ -1,8 +1,9 @@
 <template>
-  <nav class="navbar">
+  <header class="navbar">
     <div class="navbar__inner container">
       <router-link to="/" class="navbar__logo">Someone.HX</router-link>
-      <div class="navbar__links">
+
+      <nav class="navbar__links" aria-label="主导航">
         <router-link to="/blog/" class="navbar__link">
           <VIcon icon="mdi:post-outline" width="16" class="navbar__link-icon" />
           博客
@@ -27,15 +28,23 @@
           <VIcon icon="mdi:message-text-outline" width="16" class="navbar__link-icon" />
           留言
         </router-link>
-        <button class="navbar__search-btn" @click="openSearch" title="搜索">
+      </nav>
+
+      <div class="navbar__actions">
+        <button class="navbar__search-btn" @click="openSearch" title="搜索" aria-label="搜索">
           <VIcon icon="mdi:magnify" width="16" />
         </button>
-        <button class="navbar__theme-btn" @click="toggleDarkMode" :title="isDark ? '切换亮色模式' : '切换深色模式'">
+        <button
+          class="navbar__theme-btn"
+          @click="toggleDarkMode"
+          :title="isDark ? '切换亮色模式' : '切换深色模式'"
+          :aria-label="isDark ? '切换亮色模式' : '切换深色模式'"
+        >
           <VIcon :icon="isDark ? 'mdi:white-balance-sunny' : 'mdi:moon-waning-crescent'" width="16" />
         </button>
       </div>
     </div>
-  </nav>
+  </header>
   <SearchModal :visible="showSearch" @close="closeSearch" />
 </template>
 
@@ -81,10 +90,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   -webkit-backdrop-filter: blur(8px);
 }
 
+/* 桌面：单行，logo 在左，tabs+操作在右 */
 .navbar__inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-md);
   height: 100%;
 }
 
@@ -93,6 +103,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   font-weight: 700;
   color: var(--color-gray-900);
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .navbar__logo:hover {
@@ -101,7 +112,9 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 
 .navbar__links {
   display: flex;
+  align-items: center;
   gap: var(--space-md);
+  margin-left: auto;
 }
 
 .navbar__link {
@@ -110,6 +123,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   gap: var(--space-xs);
   font-size: var(--text-sm);
   color: var(--color-gray-500);
+  white-space: nowrap;
   transition: color var(--transition-fast);
 }
 
@@ -122,10 +136,17 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   flex-shrink: 0;
 }
 
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
 .navbar__search-btn,
 .navbar__theme-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   cursor: pointer;
@@ -137,5 +158,56 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 .navbar__search-btn:hover,
 .navbar__theme-btn:hover {
   color: var(--color-accent);
+}
+
+/* 窄屏：导航拆两行——第一行 logo + 搜索/深浅色，第二行 tabs（可横滑） */
+@media (max-width: 860px) {
+  .navbar__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: calc(var(--nav-height) - var(--nav-tabs-height)) var(--nav-tabs-height);
+    grid-template-areas:
+      'logo actions'
+      'tabs  tabs';
+    align-items: center;
+    column-gap: var(--space-sm);
+    row-gap: 0;
+  }
+
+  .navbar__logo {
+    grid-area: logo;
+    align-self: center;
+    justify-self: start;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .navbar__actions {
+    grid-area: actions;
+    justify-self: end;
+  }
+
+  .navbar__links {
+    grid-area: tabs;
+    margin-left: 0;
+    align-self: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    gap: var(--space-md);
+    padding: 0 2px;
+  }
+
+  .navbar__links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navbar__search-btn,
+  .navbar__theme-btn {
+    width: 36px;
+    height: 36px;
+  }
 }
 </style>
