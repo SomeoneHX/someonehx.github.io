@@ -4,7 +4,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import ImageViewer from './ImageViewer.vue'
 import { renderMarkdownWithHeadings } from '@/utils/markdown'
 import { toggleBoxFx } from '@/utils/boxFx'
@@ -30,9 +30,73 @@ watch(
     if (version !== renderVersion) return
     renderedHtml.value = result.html
     emit('rendered', result.headings)
+    await nextTick()
+    injectHeadingAnchors()
   },
   { immediate: true }
 )
+
+/* 标题锚点：渲染出的 h2/h3/h4 带唯一 id（rehype-heading 生成，TOC 同源）。
+   为每个标题追加一个可点击的「#」链接，hover 显示、点击复制带锚点的
+   完整 URL 并同步地址栏——分享到具体小节。注入幂等（重复渲染不叠加）。 */
+function injectHeadingAnchors() {
+  const scope = root.value
+  if (!scope || typeof document === 'undefined') return
+  const heads = scope.querySelectorAll('h2[id], h3[id], h4[id]')
+  for (const h of heads) {
+    if (h.querySelector('.heading-anchor')) continue
+    const a = document.createElement('a')
+    a.className = 'heading-anchor'
+    a.href = `#${h.id}`
+    a.textContent = '#'
+    a.setAttribute('aria-label', `链接到此小节`)
+    h.appendChild(a)
+  }
+}
+
+async function onAnchorClick(e) {
+  const a = e.target.closest('.heading-anchor')
+  if (!a) return
+  /* 修饰键 / 非左键：交给浏览器默认行为（新标签打开带锚点链接） */
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+  e.preventDefault()
+  const hash = a.getAttribute('href')
+  if (!hash || typeof location === 'undefined') return
+  try {
+    history.replaceState(null, '', hash)
+  } catch {
+    /* 忽略：地址栏同步失败不影响复制 */
+  }
+  const ok = await copyText(`${location.origin}${location.pathname}${hash}`)
+  const orig = a.textContent
+  a.textContent = ok ? '✓' : '×'
+  a.classList.add('heading-anchor--done')
+  setTimeout(() => {
+    a.textContent = orig
+    a.classList.remove('heading-anchor--done')
+  }, 1400)
+}
+
+/* 剪贴板写入：Clipboard API + 非安全上下文 execCommand 兜底 */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch (err) {
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.cssText = 'position:fixed;opacity:0'
+      document.body.appendChild(ta)
+      ta.select()
+      const ok = document.execCommand('copy')
+      ta.remove()
+      return ok
+    } catch (err2) {
+      return false
+    }
+  }
+}
 
 function onImageClick(e) {
   const img = e.target.closest('img')
@@ -66,24 +130,7 @@ async function onCopyClick(e) {
   clone.querySelectorAll('.line-number').forEach((n) => n.remove())
   const text = clone.innerText || codeEl.textContent || ''
 
-  let ok = false
-  try {
-    await navigator.clipboard.writeText(text)
-    ok = true
-  } catch (err) {
-    /* 非安全上下文回退：隐藏 textarea + execCommand */
-    try {
-      const ta = document.createElement('textarea')
-      ta.value = text
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      ok = document.execCommand('copy')
-      ta.remove()
-    } catch (err2) {
-      ok = false
-    }
-  }
+  const ok = await copyText(text)
 
   const original = btn.textContent
   btn.textContent = ok ? '已复制' : '复制失败'
@@ -96,13 +143,17 @@ onMounted(() => {
   root.value?.addEventListener('click', onImageClick)
   root.value?.addEventListener('click', onBoxToggle)
   root.value?.addEventListener('click', onCopyClick)
+  root.value?.addEventListener('click', onAnchorClick)
   document.addEventListener('keydown', onKeydown)
+  /* 兜底注入：markdown 若在挂载前已渲染完毕，首次注入时机仍可被覆盖 */
+  injectHeadingAnchors()
 })
 
 onUnmounted(() => {
   root.value?.removeEventListener('click', onImageClick)
   root.value?.removeEventListener('click', onBoxToggle)
   root.value?.removeEventListener('click', onCopyClick)
+  root.value?.removeEventListener('click', onAnchorClick)
   document.removeEventListener('keydown', onKeydown)
 })
 </script>
@@ -234,33 +285,37 @@ pre[class*="language-"] {
 .dynamic-content h5 { font-size: var(--text-sm); }
 .dynamic-content h6 { font-size: var(--text-sm); }
 
-.dynamic-content h1[id],
+/* 标题锚点分享：渲染后由 JS 注入 <a class="heading-anchor">（幂等），
+   hover 标题时显现，点击复制带 #id 的完整链接。透明占位不改变折行布局。 */
 .dynamic-content h2[id],
 .dynamic-content h3[id],
-.dynamic-content h4[id],
-.dynamic-content h5[id],
-.dynamic-content h6[id] {
+.dynamic-content h4[id] {
   scroll-margin-top: calc(var(--nav-height) + 16px);
 }
 
-.dynamic-content h1[id]:hover,
-.dynamic-content h2[id]:hover,
-.dynamic-content h3[id]:hover,
-.dynamic-content h4[id]:hover,
-.dynamic-content h5[id]:hover,
-.dynamic-content h6[id]:hover {
-  cursor: pointer;
-}
-
-.dynamic-content h1[id]:hover::after,
-.dynamic-content h2[id]:hover::after,
-.dynamic-content h3[id]:hover::after,
-.dynamic-content h4[id]:hover::after,
-.dynamic-content h5[id]:hover::after,
-.dynamic-content h6[id]:hover::after {
-  content: ' #';
+.dynamic-content .heading-anchor {
+  border-bottom: none !important;
+  text-decoration: none;
   color: var(--color-gray-400);
   font-weight: 400;
+  font-size: 0.85em;
+  margin-left: 0.3em;
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+  user-select: none;
+}
+
+.dynamic-content h2[id]:hover .heading-anchor,
+.dynamic-content h3[id]:hover .heading-anchor,
+.dynamic-content h4[id]:hover .heading-anchor,
+.dynamic-content .heading-anchor:hover,
+.dynamic-content .heading-anchor--done {
+  opacity: 1;
+}
+
+.dynamic-content .heading-anchor:hover,
+.dynamic-content .heading-anchor--done {
+  color: var(--color-gray-900);
 }
 
 .dynamic-content p {

@@ -52,6 +52,13 @@ function scrollTo(id) {
   const el = document.getElementById(id)
   if (el) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    /* 地址栏同步 #id（replaceState 不产生历史），与正文标题 # 号行为闭环：
+       刷新/分享均保留小节位置 */
+    try {
+      history.replaceState(null, '', `#${id}`)
+    } catch {
+      /* 忽略：地址栏同步失败不影响滚动 */
+    }
   }
 }
 

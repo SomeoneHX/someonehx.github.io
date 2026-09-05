@@ -16,8 +16,17 @@
       </span>
       <div class="card__content">
       <div class="card__meta">
-        <VIcon icon="mdi:calendar-outline" width="14" class="card__meta-icon" />
-        {{ formatDate(article.date) }}
+        <span class="card__meta-item">
+          <VIcon icon="mdi:calendar-outline" width="14" class="card__meta-icon" />
+          {{ formatDate(article.date) }}
+        </span>
+        <template v-if="article.readingMinutes">
+          <span class="card__meta-sep" aria-hidden="true">·</span>
+          <span class="card__meta-item">
+            <VIcon icon="mdi:clock-outline" width="14" class="card__meta-icon" />
+            约 {{ article.readingMinutes }} 分钟
+          </span>
+        </template>
       </div>
       <p class="card__description">{{ article.description }}</p>
       <div v-if="article.tags.length" class="card__tags">

@@ -74,6 +74,18 @@
   margin-bottom: var(--space-sm);
 }
 
+.card__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  white-space: nowrap;
+}
+
+.card__meta-sep {
+  color: var(--color-gray-400);
+  margin: 0 2px;
+}
+
 .card__meta-icon {
   flex-shrink: 0;
 }
