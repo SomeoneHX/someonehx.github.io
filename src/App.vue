@@ -17,12 +17,14 @@
       </router-view>
     </div>
     <FooterBar />
+    <CursorFX />
   </div>
 </template>
 
 <script setup>
 import NavBar from '@/components/NavBar.vue'
 import FooterBar from '@/components/FooterBar.vue'
+import CursorFX from '@/components/CursorFX.vue'
 import { useSeoHead } from '@/composables/useSeoHead'
 import { peekCardRect } from '@/utils/cardStore'
 import { leaveFade, pageEnter } from '@/utils/pageTransition'
@@ -49,6 +51,8 @@ function onBeforeLeave() {
    后续所有导航也被 Transition 的占位符吞掉（URL 变了仍空白）。
    必须推迟到下一帧，等当前更新收尾。 */
 function onLeave(el, done) {
+  /* 旧页即将卸载：通知自定义指针解除吸附，避免残留变形框 */
+  window.dispatchEvent(new CustomEvent('cfx:leave'))
   if (flipNav) {
     requestAnimationFrame(() => done())
     return
@@ -69,6 +73,10 @@ async function onEnter(el, done) {
     flipNav = false
   }
   done()
+  /* 新页布局稳定后：通知自定义指针以当前指针位置重新命中检测 */
+  requestAnimationFrame(() => {
+    window.dispatchEvent(new CustomEvent('cfx:routechange'))
+  })
 }
 </script>
 
