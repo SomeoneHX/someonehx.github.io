@@ -7,6 +7,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import ImageViewer from './ImageViewer.vue'
 import { renderMarkdownWithHeadings } from '@/utils/markdown'
+import { toggleBoxFx } from '@/utils/boxFx'
 
 const props = defineProps({
   markdown: { type: String, required: true },
@@ -51,7 +52,7 @@ function onBoxToggle(e) {
   if (!header) return
   const box = header.closest('.box')
   if (!box) return
-  box.toggleAttribute('data-open')
+  toggleBoxFx(box)
 }
 
 /* 代码块复制：事件委托，从 pre code 中取纯源码（剥离行号 span） */

@@ -63,6 +63,22 @@ slug: custom-slug
 
 构建脚本只解析 frontmatter、生成搜索文本与标签索引，并将文章正文的原始 Markdown 写入 `src/generated/content.json`。文章页与 Markdown 编辑器均在浏览器端使用同一套渲染器处理 Markdown，因此目录、数学公式、GFM、代码高亮和扩展指令都会在前端生成。
 
+### 折叠框容器
+
+正文支持 `:::info` / `:::success` / `:::warning` / `:::error` 四类折叠框（容器指令），可用方括号加标题、用 `{open}` 属性默认展开：
+
+```markdown
+:::warning[注意]
+这里写折叠框内容，支持任意 Markdown。
+:::
+
+:::success{open}
+这个折叠框默认展开。
+:::
+```
+
+折叠框开合带平滑动画（`src/utils/boxFx.js`）：展开是**抽屉高度滑出**、内容从模糊聚焦变清晰（340ms）；收回反向——内容先模糊、同时高度合拢（260ms）。中途再次点击会从当前形态反向继续，不跳变；系统开启"减弱动态效果"时直接切换、无动画。
+
 ## 自定义站点
 
 ### 样式主题
@@ -178,7 +194,8 @@ someonehx.github.io/
 │   │   └── card.css            # 卡片组件样式
 │   └── utils/
 │       ├── pageTransition.js   # 页面入场动画（逐行落位 + 模糊聚焦）
-│       └── cardStore.js        # 文章 FLIP 动画状态（卡片 rect 暂存）
+│       ├── cardStore.js        # 文章 FLIP 动画状态（卡片 rect 暂存）
+│       └── boxFx.js            # 折叠框开合动画（抽屉滑出 + 模糊聚焦/失焦）
 ├── public/                     # 静态资源（favicon 等）
 └── .github/
     └── workflows/              # GitHub Actions 部署配置
