@@ -74,6 +74,8 @@
   --prism-function: #dd4a68;
   --prism-regex: #e90;
   --prism-highlight-bg: #e5e5e5;
+  --prism-head-bg: #e9e5e0;
+  --prism-head-fg: #6b6b6b;
 }
 
 /* 窄屏导航拆两行：--nav-height = 首行 + tabs 行 */
@@ -118,4 +120,6 @@
   --prism-function: #61afef;
   --prism-regex: #e5c07b;
   --prism-highlight-bg: #2a2a3e;
+  --prism-head-bg: #232334;
+  --prism-head-fg: #9298a8;
 }

@@ -8,8 +8,10 @@ import remarkCodeMeta from '../../scripts/remark-code-meta.mjs'
 import remarkBilibili from '../../scripts/remark-bilibili.mjs'
 import remarkRehype from 'remark-rehype'
 import rehypeRaw from 'rehype-raw'
+import rehypeFootnote from '../../scripts/rehype-footnote.mjs'
 import rehypeKatex from 'rehype-katex'
 import rehypePrism from 'rehype-prism-plus'
+import rehypeCodeBlock from '../../scripts/rehype-code-block.mjs'
 import rehypeDetailsSummary from '../../scripts/rehype-details-summary.mjs'
 import rehypeHeading from '../../scripts/rehype-heading.mjs'
 import rehypeStringify from 'rehype-stringify'
@@ -24,8 +26,10 @@ const processor = unified()
   .use(remarkBilibili)
   .use(remarkRehype, { allowDangerousHtml: true })
   .use(rehypeRaw)
+  .use(rehypeFootnote)
   .use(rehypeKatex)
   .use(rehypePrism)
+  .use(rehypeCodeBlock)
   .use(rehypeDetailsSummary)
   .use(rehypeHeading)
   .use(rehypeStringify)

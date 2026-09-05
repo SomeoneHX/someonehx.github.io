@@ -54,15 +54,54 @@ function onBoxToggle(e) {
   box.toggleAttribute('data-open')
 }
 
+/* 代码块复制：事件委托，从 pre code 中取纯源码（剥离行号 span） */
+async function onCopyClick(e) {
+  const btn = e.target.closest('[data-code-copy]')
+  if (!btn) return
+  const codeEl = btn.closest('.code-block')?.querySelector('pre code')
+  if (!codeEl) return
+
+  const clone = codeEl.cloneNode(true)
+  clone.querySelectorAll('.line-number').forEach((n) => n.remove())
+  const text = clone.innerText || codeEl.textContent || ''
+
+  let ok = false
+  try {
+    await navigator.clipboard.writeText(text)
+    ok = true
+  } catch (err) {
+    /* 非安全上下文回退：隐藏 textarea + execCommand */
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.cssText = 'position:fixed;opacity:0'
+      document.body.appendChild(ta)
+      ta.select()
+      ok = document.execCommand('copy')
+      ta.remove()
+    } catch (err2) {
+      ok = false
+    }
+  }
+
+  const original = btn.textContent
+  btn.textContent = ok ? '已复制' : '复制失败'
+  setTimeout(() => {
+    btn.textContent = original
+  }, 1600)
+}
+
 onMounted(() => {
   root.value?.addEventListener('click', onImageClick)
   root.value?.addEventListener('click', onBoxToggle)
+  root.value?.addEventListener('click', onCopyClick)
   document.addEventListener('keydown', onKeydown)
 })
 
 onUnmounted(() => {
   root.value?.removeEventListener('click', onImageClick)
   root.value?.removeEventListener('click', onBoxToggle)
+  root.value?.removeEventListener('click', onCopyClick)
   document.removeEventListener('keydown', onKeydown)
 })
 </script>
@@ -433,6 +472,96 @@ pre[class*="language-"] {
 
 .dynamic-content .align-right {
   text-align: right;
+}
+
+/* ---- 代码块容器：语言标签 + 复制按钮 ---- */
+.dynamic-content .code-block {
+  margin-bottom: var(--space-md);
+}
+
+.dynamic-content .code-block pre {
+  margin: 0;
+}
+
+.dynamic-content .code-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 4px var(--space-md);
+  background: var(--prism-head-bg);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.18);
+  user-select: none;
+}
+
+.dynamic-content .code-block__lang {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  color: var(--prism-head-fg);
+}
+
+.dynamic-content .code-block__copy {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 2px 8px;
+  font-size: var(--text-xs);
+  font-family: inherit;
+  color: var(--prism-head-fg);
+  border-radius: 4px;
+  opacity: 0.75;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+
+.dynamic-content .code-block__copy:hover {
+  opacity: 1;
+  background: rgba(128, 128, 128, 0.15);
+}
+
+/* ---- 脚注 ---- */
+.dynamic-content .footnotes {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-gray-200);
+  font-size: var(--text-sm);
+  color: var(--color-gray-600);
+}
+
+.dynamic-content .footnotes ol {
+  margin: 0;
+  padding-left: var(--space-lg);
+}
+
+.dynamic-content .footnotes li {
+  margin-bottom: var(--space-sm);
+}
+
+.dynamic-content .footnotes li > p:only-child {
+  margin-bottom: 0;
+}
+
+.dynamic-content .footnote-backref {
+  margin-left: 4px;
+  border-bottom: none;
+  text-decoration: none;
+  color: var(--color-gray-400);
+}
+
+.dynamic-content .footnote-ref a {
+  border-bottom: none;
+}
+
+.dynamic-content .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 </style>

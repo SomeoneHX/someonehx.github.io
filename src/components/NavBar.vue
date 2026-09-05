@@ -37,10 +37,10 @@
         <button
           class="navbar__theme-btn"
           @click="toggleDarkMode"
-          :title="isDark ? '切换亮色模式' : '切换深色模式'"
-          :aria-label="isDark ? '切换亮色模式' : '切换深色模式'"
+          :title="themeNextLabel"
+          :aria-label="themeNextLabel"
         >
-          <VIcon :icon="isDark ? 'mdi:white-balance-sunny' : 'mdi:moon-waning-crescent'" width="16" />
+          <VIcon :icon="themeIcon" width="16" />
         </button>
       </div>
     </div>
@@ -49,12 +49,22 @@
 </template>
 
 <script setup>
-import { onMounted, ref, onUnmounted } from 'vue'
+import { computed, onMounted, ref, onUnmounted } from 'vue'
 import { useDarkMode } from '@/composables/useDarkMode'
 import SearchModal from '@/components/SearchModal.vue'
 
-const { isDark, initDarkMode, toggleDarkMode } = useDarkMode()
+const { mode, initDarkMode, toggleDarkMode } = useDarkMode()
 onMounted(initDarkMode)
+
+/* 三态主题：图标表示当前模式，提示语表示点击后的下一步 */
+const THEME_META = {
+  light: { icon: 'mdi:white-balance-sunny', next: '切换深色' },
+  dark: { icon: 'mdi:moon-waning-crescent', next: '切换为跟随系统' },
+  auto: { icon: 'mdi:theme-light-dark', next: '切换亮色' },
+}
+const themeMeta = computed(() => THEME_META[mode.value] || THEME_META.auto)
+const themeIcon = computed(() => themeMeta.value.icon)
+const themeNextLabel = computed(() => themeMeta.value.next)
 
 const showSearch = ref(false)
 

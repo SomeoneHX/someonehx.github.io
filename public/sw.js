@@ -6,6 +6,13 @@
  */
 const VERSION = 'v1'
 
+/* 页面请求 SW 跳过等待并立即接管新版本（配合客户端的更新提示） */
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
 const PRECACHE_URLS = [
   '/',
   '/manifest.webmanifest',

@@ -43,3 +43,40 @@ body {
 .container.section {
   padding-top: var(--space-lg);
 }
+
+/* PWA 新版本更新提示（main.js 动态注入） */
+.app-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-gray-900);
+  color: var(--color-bg-warm);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--text-sm);
+}
+
+.app-toast__msg {
+  white-space: nowrap;
+}
+
+.app-toast__btn {
+  border: none;
+  cursor: pointer;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: var(--text-sm);
+  color: var(--color-gray-900);
+  background: var(--color-accent);
+  transition: filter var(--transition-fast);
+}
+
+.app-toast__btn:hover {
+  filter: brightness(1.1);
+}
