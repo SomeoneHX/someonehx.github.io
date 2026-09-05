@@ -3,8 +3,9 @@
  *
  * 视觉：系统光标隐藏，由一个大号空心圆环跟手移动（默认态）；当指针命中
  * 「控件级」元素（链接/按钮/标签胶囊/导航项等）时，圆环平滑变形为吸附框并
- * 吸附过去——按钮这类自带边框/背景的目标贴合其原始轮廓；无轮廓的裸文本
- * 目标外扩一圈并补上圆角，形成 iPadOS 式包裹框。吸附后鼠标在控件内移动时，
+ * 吸附过去——按钮这类自带边框/背景的目标贴合其原始轮廓并钉死；无轮廓的
+ * 裸文本目标外扩一圈并补上圆角（iPadOS 式包裹框），且框随光标在目标内的
+ * 位置小幅弹性位移，追着光标更灵动。吸附后鼠标在控件内移动时，
  * 一个径向辉光斑（白色透镜高光，裁剪在框内）实时跟随指针位置，光斑直径随
  * 控件面积自动适配；移开再平滑缩回圆环。按下鼠标（未命中控件）时圆环收缩
  * 为一个小实心点，松开恢复。
@@ -36,6 +37,9 @@ const LERP = 0.5         /* 浮点跟随阻尼：越大越跟手，0.5 有轻微
 const REVERT_MS = 240    /* 吸附移开后缩回圆点的时长（rAF 插值，实时追鼠标） */
 const SNAP_PAD = 4       /* 无自带轮廓的文本目标：吸附框外扩量（px），轻微包裹即可 */
 const SNAP_RADIUS = 6    /* 无轮廓目标补圆角：与站内按钮圆角一致（--radius-sm: 6px） */
+const MORPH_MS = 260     /* 吸附变形过渡时长（与 .cfx-morph CSS 一致），之后才接管逐帧位移 */
+const SNAP_DRIFT = 3     /* 无轮廓框随光标的最大位移（px，≤ SNAP_PAD 保证文字不外露） */
+const DRIFT_LERP = 0.3   /* 位移平滑阻尼：越小越柔 */
 const GLOW_LERP = 0.45   /* 吸附辉光跟随阻尼：0.45 贴手且带轻微柔滞 */
 const GLOW_F = 1.15      /* 辉光直径 = sqrt(控件宽×高) × 系数 */
 const GLOW_MIN = 44      /* 辉光直径上下限（px）：小标签不过碎、大按钮不过巨 */
@@ -65,7 +69,12 @@ let glowEl = null        /* 辉光子层 DOM */
 let glowX = 0            /* 光斑当前中心（相对吸附目标左上角，px） */
 let glowY = 0
 let glowD = 0            /* 光斑直径（吸附时按控件面积定一次） */
-let snapGeo = null       /* {left, top, w, h} 吸附目标几何（viewport 坐标） */
+let snapGeo = null       /* {left, top, w, h} 吸附框基础几何（viewport 坐标，含外扩） */
+let snapOwn = false      /* 吸附目标是否自带轮廓（有则不随光标位移、钉死贴合） */
+let snapAt = 0           /* 吸附开始的时刻（位移需等 morph 变形过渡结束后接管） */
+let snapDrifting = false /* 是否已从 CSS morph 切换到逐帧位移驱动 */
+let curOX = 0            /* 当前框位移（px，无轮廓目标的弹性跟随） */
+let curOY = 0
 let mqFine = null
 let mqReduce = null
 let lastMoveAt = 0      /* 最后一次父文档 pointermove 时刻，供静默看门狗判定 */
@@ -168,6 +177,11 @@ function doSnap(it) {
   const radius = own ? radiusOf(it, w, h) : SNAP_RADIUS
 
   snapEl = it
+  snapOwn = own
+  snapAt = performance.now()
+  snapDrifting = false
+  curOX = 0
+  curOY = 0
   mode = 'snap'
   stopLoop() /* 吸附形状由 CSS transition 驱动；辉光跟随由 frame 插值驱动 */
 
@@ -264,11 +278,36 @@ function frame() {
     /* 落到下方浮点分支继续（位移已收敛，会立即停帧） */
   }
 
-  /* 吸附期：光斑中心每帧向最新鼠标相对位置插值——鼠标在控件内移动时，
-     辉光实时跟手（glowX/Y 是相对 snapGeo 的偏移，目标控件不滚动则几何恒定） */
+  /* 吸附期：
+     - 自带轮廓的目标：框钉死在目标上（无位移），仅辉光跟随光标；
+     - 无轮廓目标：变形过渡（morph）结束后接管逐帧驱动，框随光标在目标内的
+       相对位置小幅弹性位移（光标滑到哪一侧框往哪侧轻移，追着光标更灵动，
+       幅度 ≤ SNAP_DRIFT 且 < SNAP_PAD，文字不会露出框外）。
+     辉光基准（框左上角）随位移同步，光斑始终以光标为心。 */
   if (mode === 'snap' && snapGeo) {
-    const tx = mouseX - snapGeo.left
-    const ty = mouseY - snapGeo.top
+    let ox = 0
+    let oy = 0
+    if (!snapOwn) {
+      if (performance.now() - snapAt > MORPH_MS + 40) {
+        if (!snapDrifting) {
+          snapDrifting = true
+          el.classList.remove('cfx-morph') /* JS 逐帧写 transform，撤掉 CSS transition 防双驱动 */
+        }
+        const rx = (mouseX - snapGeo.left) / snapGeo.w /* 光标在框内 0..1（横） */
+        const ry = (mouseY - snapGeo.top) / snapGeo.h
+        const tox = (rx * 2 - 1) * SNAP_DRIFT
+        const toy = (ry * 2 - 1) * SNAP_DRIFT
+        curOX += (tox - curOX) * DRIFT_LERP
+        curOY += (toy - curOY) * DRIFT_LERP
+        ox = curOX
+        oy = curOY
+        el.style.transform = `translate(${snapGeo.left + ox}px, ${snapGeo.top + oy}px)`
+      }
+    }
+    const bx = snapGeo.left + ox
+    const by = snapGeo.top + oy
+    const tx = mouseX - bx
+    const ty = mouseY - by
     const dx = tx - glowX
     const dy = ty - glowY
     if (Math.abs(dx) >= 0.5 || Math.abs(dy) >= 0.5) {
