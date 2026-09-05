@@ -92,9 +92,27 @@ slug: custom-slug
 | 路径 | 页面 | 说明 |
 |------|------|------|
 | `/` | HomeView | 主页：Bing 每日一图 + 个人资料 + 最新文章 |
-| `/blog/` | BlogView | 文章列表（2 列网格） |
-| `/blog/:slug/` | ArticleView | 文章详情页（带 FLIP 动画） |
-| `/tags/:tag/` | BlogView | 按标签筛选 |
+| `/blog/` | BlogView | 文章列表（2 列网格 + 加载更多） |
+| `/blog/:slug/` | ArticleView | 文章详情：FLIP 展开进入、目录、相关文章、上下篇、Giscus 评论区 |
+| `/tags/` | TagsView | 标签云 |
+| `/tags/:tag/` | BlogView | 按标签筛选文章 |
+| `/about/` | AboutView | 关于页 |
+| `/archives/` | ArchivesView | 归档 |
+| `/guestbook/` | GuestbookView | 留言板（Giscus） |
+| `*` | NotFoundView | 404 兜底页 |
+
+## 页面过渡动画
+
+路由切换、以及直达 URL / 刷新页面，都会播放统一的入场动画，全部由 WAAPI（`Element.animate`）驱动：
+
+- **逐行落位**：旧页淡出 170ms 后，新页内容按「行」自上而下级联入场。每个块（标题/段落/卡片/标签胶囊/按钮/代码块）以「缩小 + 偏上 + 轻模糊 + 透明」为初态，向自身中心放大、聚焦归位。
+- **同行齐动**：同一水平行的元素（网格一行卡片、同排标签）同时落位，行与行错峰。
+- **自适应节拍**：按首屏行数动态分配时长——行少舒展、行多收紧（约 800ms 总预算），避免长文页面线性拖沓。
+- **FLIP 进入文章**：从首页/列表点卡片进文章时，卡片原位放大展开为文章头部，跳过整页淡出实现瞬时衔接；返回列表为普通入场。
+- **直达/刷新也播**：SSG 静态 HTML 先由 `.app__main` 首帧 gate（`opacity: 0`）隐藏，JS 挂载后经 transition `appear` 钩子播放相同入场，不会"闪现内容再重播"。
+- **可访问性**：遵循 `prefers-reduced-motion`（开启即跳过动画、内容直接显示），无 JS 时由 `<noscript>` 强制显示。
+
+动画调度集中在 `src/utils/pageTransition.js`：时长、行间隔、模糊半径、总预算等常量都定义在文件顶部，可按喜好调整（例如把模糊半径常量设为 `0` 即关闭模糊聚焦效果）。
 
 ## 项目架构
 
@@ -109,33 +127,44 @@ someonehx.github.io/
 │   └── articles/               # 所有文章（.md 文件）
 ├── src/
 │   ├── main.js                 # 入口：ViteSSG 创建应用
-│   ├── App.vue                 # 根组件
+│   ├── App.vue                 # 根组件（含路由过渡协调：leave/enter/appear）
 │   ├── router/
 │   │   └── index.js            # 路由定义
 │   ├── generated/              # gitignore，构建产物
 │   │   └── content.json        # 编译后的文章数据
-│   ├── views/
+│   ├── composables/
+│   │   └── useSeoHead.js       # 逐页 SEO head（标题/描述/OG/JSON-LD）
 │   ├── data/
-│   │   └── profile.js          # 个人外链数据
+│   │   └── profile.js          # 个人资料与外链数据
 │   ├── views/
 │   │   ├── HomeView.vue        # 主页
-│   │   ├── BlogView.vue        # 博客列表（带筛选）
+│   │   ├── BlogView.vue        # 博客列表（含标签筛选 + 加载更多）
 │   │   ├── ArticleView.vue     # 文章详情
+│   │   ├── TagsView.vue        # 标签云
+│   │   ├── AboutView.vue       # 关于
+│   │   ├── ArchivesView.vue    # 归档
+│   │   ├── GuestbookView.vue   # 留言板
+│   │   └── NotFoundView.vue    # 404
 │   ├── components/
-│   │   ├── NavBar.vue          # 顶部导航栏
+│   │   ├── NavBar.vue          # 顶部导航栏（含搜索、主题切换）
 │   │   ├── HeroBanner.vue      # Bing 每日一图（100vh）
 │   │   ├── DrawerSection.vue   # 滚动触发的抽屉布局
 │   │   ├── ProfileSection.vue  # 个人资料与外链
-│   │   ├── ArticleCard.vue     # 文章卡片（FLIP 动画）
+│   │   ├── ArticleCard.vue     # 文章卡片（FLIP 动画起点）
 │   │   ├── DynamicContent.vue  # 前端渲染 Markdown
+│   │   ├── ArticleToc.vue      # 文章目录
+│   │   ├── GiscusView.vue      # Giscus 评论区
+│   │   ├── SearchModal.vue     # 全文搜索弹层
+│   │   ├── ImageViewer.vue     # 图片灯箱
 │   │   └── FooterBar.vue       # 页脚
 │   ├── styles/
 │   │   ├── reset.css           # CSS reset
 │   │   ├── variables.css       # 设计令牌（CSS 变量）
-│   │   ├── global.css          # 全局布局样式
+│   │   ├── global.css          # 全局布局 + 首帧动画 gate
 │   │   └── card.css            # 卡片组件样式
 │   └── utils/
-│       └── cardStore.js        # 文章 FLIP 动画状态管理
+│       ├── pageTransition.js   # 页面入场动画（逐行落位 + 模糊聚焦）
+│       └── cardStore.js        # 文章 FLIP 动画状态（卡片 rect 暂存）
 ├── public/                     # 静态资源（favicon 等）
 └── .github/
     └── workflows/              # GitHub Actions 部署配置

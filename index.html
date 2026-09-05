@@ -24,5 +24,13 @@
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
+    <noscript>
+      <!-- 首帧加载保护在 JS 不可用时会让主内容区保持隐藏，这里强制显示 -->
+      <style>
+        .app__main {
+          opacity: 1 !important;
+        }
+      </style>
+    </noscript>
   </body>
 </html>

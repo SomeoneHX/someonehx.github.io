@@ -80,3 +80,19 @@ body {
 .app-toast__btn:hover {
   filter: brightness(1.1);
 }
+
+/* ---- 首帧加载保护（直达 / 刷新 / 首次进入）----
+   页面内容由 vite-ssg 预渲染在静态 HTML 中，浏览器会先于 JS 把它画出来；
+   若不做保护，直接访问时会先闪现完整内容，随后才补播路由入场动画（闪一下再动）。
+   这里让 .app__main 在 JS 接管前保持不可见，pageTransition.js 在动画排程完成、
+   各块已进入透明初态后，给 .app__main 加 .pg-revealed 放行（同帧解锁无闪烁）。
+   减弱动效偏好或无 JS（见 index.html 的 noscript 兜底）时内容始终可见。 */
+@media (prefers-reduced-motion: no-preference) {
+  .app__main {
+    opacity: 0;
+  }
+  .app__main.pg-revealed {
+    opacity: 1;
+  }
+}
+
