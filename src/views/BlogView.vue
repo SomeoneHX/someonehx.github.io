@@ -22,22 +22,29 @@
 
       <div v-if="filteredArticles.length" class="grid-2">
         <ArticleCard
-          v-for="article in filteredArticles"
+          v-for="article in displayedArticles"
           :key="article.slug"
           :article="article"
           @tagClick="goToTag"
         />
       </div>
       <p v-else class="blog__empty">暂无文章</p>
+
+      <button v-if="hasMore" class="blog__load-more" @click="loadMore">
+        加载更多
+        <VIcon icon="mdi:chevron-down" width="16" class="blog__load-more-icon" />
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArticleCard from '@/components/ArticleCard.vue'
 import data from '@/generated/content.json'
+
+const PAGE_STEP = 6
 
 const route = useRoute()
 const router = useRouter()
@@ -59,14 +66,32 @@ const filterLabel = computed(() => {
   return ''
 })
 
+/* 全量视图：置顶优先（稳定排序，保留时间倒序的相对顺序）；
+   标签筛选视图：保持时间倒序、不做置顶 */
 const filteredArticles = computed(() => {
   const tag = route.params.tag
   if (tag && data.tagsIndex[tag]) {
     const slugs = new Set(data.tagsIndex[tag])
     return data.articles.filter(a => slugs.has(a.slug))
   }
-  return data.articles
+  return [...data.articles].sort((a, b) => Number(b.pinned) - Number(a.pinned))
 })
+
+const visibleCount = ref(PAGE_STEP)
+const displayedArticles = computed(() => filteredArticles.value.slice(0, visibleCount.value))
+const hasMore = computed(() => visibleCount.value < filteredArticles.value.length)
+
+function loadMore() {
+  visibleCount.value += PAGE_STEP
+}
+
+/* 切换标签时重置分页进度 */
+watch(
+  () => route.params.tag,
+  () => {
+    visibleCount.value = PAGE_STEP
+  }
+)
 </script>
 
 <style scoped>
@@ -113,5 +138,38 @@ const filteredArticles = computed(() => {
 .blog__empty {
   color: var(--color-gray-400);
   font-size: var(--text-sm);
+}
+
+.blog__load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  margin: var(--space-2xl) auto 0;
+  padding: var(--space-sm) var(--space-xl);
+  font-size: var(--text-sm);
+  color: var(--color-gray-600);
+  background: none;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast),
+              color var(--transition-fast),
+              background var(--transition-fast);
+}
+
+.blog__load-more:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+}
+
+.blog__load-more-icon {
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.blog__load-more:hover .blog__load-more-icon {
+  transform: translateY(2px);
 }
 </style>

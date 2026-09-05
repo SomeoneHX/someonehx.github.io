@@ -38,11 +38,17 @@ async function build() {
       cover: data.cover || '',
       date: data.date || null,
       tags: data.tags || [],
+      pinned: !!data.pinned,
       description: data.description || '',
       links,
       markdown: content,
       text: toPlainText(content),
+      wordCount: 0,
+      readingMinutes: 0,
     }
+    // 中文按约 300 字/分钟粗算阅读时长
+    article.wordCount = Array.from(article.text.replace(/\s+/g, '')).length
+    article.readingMinutes = Math.max(1, Math.round(article.wordCount / 300))
     articles.push(article)
 
     for (const tag of article.tags) {

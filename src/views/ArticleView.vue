@@ -1,5 +1,10 @@
 <template>
   <article ref="rootRef" class="article" :style="flipStyle">
+    <div
+      class="article__progress"
+      :style="{ width: `${progress}%` }"
+      aria-hidden="true"
+    />
     <template v-if="!article">
       <div class="container">
         <p class="article__not-found">文章未找到</p>
@@ -23,6 +28,14 @@
                 <VIcon icon="mdi:calendar-outline" width="14" class="article__meta-icon" />
                 {{ formatDate(article.date) }}
               </time>
+              <span v-if="article.wordCount" class="article__meta-item">
+                <VIcon icon="mdi:text-box-outline" width="14" class="article__meta-icon" />
+                {{ article.wordCount }} 字
+              </span>
+              <span class="article__meta-item">
+                <VIcon icon="mdi:clock-outline" width="14" class="article__meta-icon" />
+                约 {{ article.readingMinutes }} 分钟
+              </span>
             </div>
             <div v-if="article.tags.length" class="article__tags">
               <router-link
@@ -62,18 +75,77 @@
             <ArticleToc :headings="headings" />
           </aside>
         </div>
+
         <div class="container">
+          <section v-if="related.length" class="article__related">
+            <h2 class="article__block-heading">
+              <VIcon icon="mdi:creation-outline" width="15" class="article__block-heading-icon" />
+              相关文章
+            </h2>
+            <div class="article__related-list">
+              <router-link
+                v-for="item in related"
+                :key="item.slug"
+                :to="`/blog/${item.slug}/`"
+                class="article__related-item"
+              >
+                <span class="article__related-title">{{ item.title }}</span>
+                <span class="article__related-meta">
+                  {{ formatDate(item.date) }}
+                  <template v-if="item.readingMinutes"> · 约 {{ item.readingMinutes }} 分钟</template>
+                </span>
+              </router-link>
+            </div>
+          </section>
+
+          <nav v-if="prevArticle || nextArticle" class="article__pager">
+            <router-link
+              v-if="prevArticle"
+              :to="`/blog/${prevArticle.slug}/`"
+              class="article__pager-link"
+            >
+              <span class="article__pager-label">
+                <VIcon icon="mdi:arrow-left" width="14" class="article__pager-icon" />
+                上一篇
+              </span>
+              <span class="article__pager-title">{{ prevArticle.title }}</span>
+            </router-link>
+            <span v-else class="article__pager-spacer" />
+            <router-link
+              v-if="nextArticle"
+              :to="`/blog/${nextArticle.slug}/`"
+              class="article__pager-link article__pager-link--next"
+            >
+              <span class="article__pager-label">
+                下一篇
+                <VIcon icon="mdi:arrow-right" width="14" class="article__pager-icon" />
+              </span>
+              <span class="article__pager-title">{{ nextArticle.title }}</span>
+            </router-link>
+            <span v-else class="article__pager-spacer" />
+          </nav>
+
           <ClientOnly>
             <GiscusView :term="route.path" />
           </ClientOnly>
         </div>
       </div>
     </template>
+
+    <button
+      class="article__backtop"
+      v-show="showBackTop"
+      @click="scrollToTop"
+      title="回到顶部"
+      aria-label="回到顶部"
+    >
+      <VIcon icon="mdi:chevron-up" width="20" />
+    </button>
   </article>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DynamicContent from '@/components/DynamicContent.vue'
 import GiscusView from '@/components/GiscusView.vue'
@@ -155,6 +227,58 @@ const article = computed(() =>
   data.articles.find(a => a.slug === route.params.slug) || null
 )
 
+/* 时间倒序列表中相邻一篇 = 上一篇（更新），下一篇（更旧） */
+const prevArticle = computed(() => {
+  const i = data.articles.findIndex(a => a.slug === route.params.slug)
+  return i > 0 ? data.articles[i - 1] : null
+})
+
+const nextArticle = computed(() => {
+  const i = data.articles.findIndex(a => a.slug === route.params.slug)
+  return i >= 0 && i < data.articles.length - 1 ? data.articles[i + 1] : null
+})
+
+/* 相关文章：按共同标签数排序，取最多 3 篇 */
+const related = computed(() => {
+  const cur = article.value
+  if (!cur || !cur.tags.length) return []
+  const tagSet = new Set(cur.tags)
+  return data.articles
+    .filter(a => a.slug !== cur.slug && a.tags.some(t => tagSet.has(t)))
+    .map(a => ({
+      article: a,
+      score: a.tags.filter(t => tagSet.has(t)).length,
+    }))
+    .sort((x, y) => y.score - x.score || new Date(y.article.date) - new Date(x.article.date))
+    .slice(0, 3)
+    .map(x => x.article)
+})
+
+/* 阅读进度条 + 回到顶部 */
+const progress = ref(0)
+const showBackTop = ref(false)
+
+function onScroll() {
+  const scroller = document.scrollingElement || document.documentElement
+  const max = scroller.scrollHeight - scroller.clientHeight
+  progress.value = max > 0 ? Math.min(100, (scroller.scrollTop / max) * 100) : 0
+  showBackTop.value = scroller.scrollTop > 600
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(() => {
+  onScroll()
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onScroll)
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', onScroll)
+})
+
 function formatDate(date) {
   if (!date) return ''
   return new Date(date).toLocaleDateString('zh-CN', {
@@ -174,6 +298,17 @@ function goBack() {
 </script>
 
 <style scoped>
+.article__progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--color-accent);
+  z-index: 120;
+  pointer-events: none;
+  transition: width 0.1s linear;
+}
+
 .article__header {
   padding: var(--space-xl) 0 var(--space-xl);
   border-bottom: 1px solid var(--color-gray-200);
@@ -268,7 +403,8 @@ function goBack() {
   color: rgba(255, 255, 255, 0.65);
 }
 
-.article__meta time {
+.article__meta time,
+.article__meta-item {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
@@ -377,5 +513,146 @@ function goBack() {
   .article__toc-col {
     display: block;
   }
+}
+
+/* 相关文章 */
+.article__block-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-lg);
+}
+
+.article__block-heading-icon {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.article__related {
+  margin-top: var(--space-2xl);
+  border-top: 1px solid var(--color-gray-200);
+  padding-top: var(--space-2xl);
+}
+
+.article__related-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+.article__related-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  border: 1px solid var(--color-gray-100);
+  border-radius: var(--radius-md);
+  background: var(--color-card-bg);
+  padding: var(--space-md) var(--space-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base),
+              border-color var(--transition-base),
+              transform var(--transition-base);
+}
+
+.article__related-item:hover {
+  border-color: var(--color-accent-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.article__related-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.article__related-meta {
+  font-size: var(--text-xs);
+  color: var(--color-gray-400);
+}
+
+/* 上/下一篇 */
+.article__pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  margin-top: var(--space-2xl);
+  border-top: 1px solid var(--color-gray-200);
+  padding-top: var(--space-lg);
+}
+
+.article__pager-link {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) 0;
+}
+
+.article__pager-link--next {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.article__pager-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-sm);
+  color: var(--color-gray-400);
+  transition: color var(--transition-fast);
+}
+
+.article__pager-link:hover .article__pager-label {
+  color: var(--color-accent);
+}
+
+.article__pager-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.article__pager-spacer {
+  flex: 1;
+}
+
+/* 回到顶部 */
+.article__backtop {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  z-index: 110;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-gray-200);
+  background: var(--color-surface);
+  color: var(--color-gray-600);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: color var(--transition-fast),
+              border-color var(--transition-fast),
+              transform var(--transition-fast);
+}
+
+.article__backtop:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
 }
 </style>

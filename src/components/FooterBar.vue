@@ -14,6 +14,10 @@
           <VIcon :icon="link.icon" width="14" class="footer__link-icon" />
           {{ link.label }}
         </a>
+        <a href="/feed.xml" target="_blank" rel="noopener noreferrer" class="footer__link">
+          <VIcon icon="mdi:rss" width="14" class="footer__link-icon" />
+          RSS
+        </a>
       </div>
     </div>
   </footer>

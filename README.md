@@ -54,6 +54,7 @@ slug: custom-slug
 | `tags` | 否 | 标签数组 |
 | `description` | 否 | 文章卡片显示的摘要 |
 | `published` | 否 | `false` 时为草稿，不会出现在站点上 |
+| `pinned` | 否 | `true` 时文章在「文章」列表中置顶（标签筛选与归档不受影响） |
 | `slug` | 否 | 自定义 URL，默认使用文件名 |
 
 开发时运行 `npm run dev`：保存、新增或删除文章后，内容数据会自动更新并刷新页面。部署前运行 `npm run build` 即可生成站点。
