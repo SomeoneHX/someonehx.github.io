@@ -20,7 +20,7 @@
         </template>
       </div>
 
-      <div v-if="filteredArticles.length" class="grid-2">
+      <div v-if="filteredArticles.length" ref="gridEl" class="grid-2">
         <ArticleCard
           v-for="article in displayedArticles"
           :key="article.slug"
@@ -39,9 +39,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArticleCard from '@/components/ArticleCard.vue'
+import { revealNodes } from '@/utils/pageTransition'
 import data from '@/generated/content.json'
 
 const PAGE_STEP = 6
@@ -81,8 +82,22 @@ const visibleCount = ref(PAGE_STEP)
 const displayedArticles = computed(() => filteredArticles.value.slice(0, visibleCount.value))
 const hasMore = computed(() => visibleCount.value < filteredArticles.value.length)
 
-function loadMore() {
+/* 卡片网格容器（用于定位本次新增的卡片节点） */
+const gridEl = ref(null)
+
+async function loadMore() {
+  /* 记住旧截断点：新批次卡片 = 渲染完成后网格里从该下标往后的节点 */
+  const from = visibleCount.value
   visibleCount.value += PAGE_STEP
+
+  /* 等 Vue 把新卡片渲染进 DOM；此后的微任务在浏览器绘制前继续，
+     新卡片不会以完整可见状态被画出来 */
+  await nextTick()
+
+  const grid = gridEl.value
+  if (!grid) return
+  /* 新卡片播放与页面入场同款的「逐行落位」动画（减弱动效时内部自动放行） */
+  revealNodes([...grid.children].slice(from))
 }
 
 /* 切换标签时重置分页进度 */

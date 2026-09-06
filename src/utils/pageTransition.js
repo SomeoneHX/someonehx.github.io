@@ -88,6 +88,50 @@ const waitFrames = (n = 1) =>
     requestAnimationFrame(tick)
   })
 
+/**
+ * 按「行」级联排程落位动画：同一行同时落位、行与行自上而下错峰。
+ * 键帧/节拍与页面入场完全同款（缩小偏上 + 透明 + 轻模糊 → 放大聚焦归位）。
+ * @param {Array<Array<{node: Element}>>} rows groupRows/collectRows 产出的行
+ * @returns {Animation[]} 已创建的 WAAPI 动画（fill:backwards 无 inline 残留）
+ */
+function scheduleRows(rows) {
+  const anims = []
+  if (!rows.length) return anims
+
+  /* 按行数自动估算节拍（行多收紧、行少舒展） */
+  const { pop, gap } = pace(rows.length)
+  let t = 0
+  for (const row of rows) {
+    for (const item of row) {
+      const anim = item.node.animate(
+        [
+          {
+            opacity: 0,
+            transform: `translateY(${FROM_Y}px) scale(${FROM_SCALE})`,
+            filter: `blur(${FROM_BLUR}px)`,
+          },
+          {
+            opacity: 1,
+            transform: 'translateY(0) scale(1)',
+            filter: 'blur(0)',
+          },
+        ],
+        {
+          duration: pop,
+          delay: t,
+          /* backwards：延迟期保持初态（透明、缩小偏上），结束后无 inline 残留 */
+          fill: 'backwards',
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        }
+      )
+      anim.finished.catch(() => {})
+      anims.push(anim)
+    }
+    t += gap
+  }
+  return anims
+}
+
 /* ---------- 路由过渡层回调 ---------- */
 
 /** 旧页淡出（170ms），resolve 后可调用 done() */
@@ -120,39 +164,8 @@ export async function pageEnter(el) {
 
     const rows = collectRows(el)
 
-    /* 按首屏行数自动估算节拍（行多收紧、行少舒展） */
-    const { pop, gap } = pace(rows.length)
-
     /* 行级联排程：同一行同时落位，行与行自上而下错峰 */
-    let t = 0
-    for (const row of rows) {
-      for (const item of row) {
-        const anim = item.node.animate(
-          [
-            {
-              opacity: 0,
-              transform: `translateY(${FROM_Y}px) scale(${FROM_SCALE})`,
-              filter: `blur(${FROM_BLUR}px)`,
-            },
-            {
-              opacity: 1,
-              transform: 'translateY(0) scale(1)',
-              filter: 'blur(0)',
-            },
-          ],
-          {
-            duration: pop,
-            delay: t,
-            /* backwards：延迟期保持初态（透明、缩小偏上），结束后无 inline 残留 */
-            fill: 'backwards',
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-          }
-        )
-        anim.finished.catch(() => {})
-        anims.push(anim)
-      }
-      t += gap
-    }
+    anims.push(...scheduleRows(rows))
   } finally {
     /* 首帧加载保护解锁：直达/刷新/首次进入时 .app__main 初始 opacity:0
        （见 global.css），防预渲染内容先闪现。排程后同帧放行——此刻各块
@@ -202,10 +215,14 @@ function collectBlocks(root) {
  * 网格的一行卡片块顶相同 → 同一行；单栏文本块顶依次拉开 → 各成一行。
  */
 function collectRows(root) {
-  const blocks = collectBlocks(root)
+  return groupRows(collectBlocks(root))
+}
+
+/** 把已按 (top, left) 升序排列的块聚成「行」（同上容差；含自定义增量场景） */
+function groupRows(sorted) {
   const rows = []
 
-  for (const b of blocks) {
+  for (const b of sorted) {
     const last = rows[rows.length - 1]
     if (last && b.top - last.anchorTop <= ROW_TOL) {
       last.push(b)
@@ -216,4 +233,47 @@ function collectRows(root) {
     }
   }
   return rows
+}
+
+/**
+ * 为「加载更多」这类原地新增的节点播放与 pageEnter 同款的逐行落位入场。
+ * 调用方须等新增节点渲染进 DOM 后再传（组件内先 await nextTick）；节点按各自
+ * 当前 top 聚类成行、行内同弹、行间错峰——与首屏入场观感一致。
+ * 与页面入场不同：这里不做首屏过滤（新批次可能出现在视口之外），照常动画。
+ * 时序安全：同一同步块内完成「inline 遮隐 → 量位 → 排程 → 还原 inline」，
+ * 浏览器无机会在中间绘制，可见性全程由 fill:backwards 维持，绝不闪出整卡。
+ * 减弱动效时直接放行，不播动画。
+ * @param {Iterable<Element>} nodes 已完成布局的新增节点
+ */
+export async function revealNodes(nodes) {
+  const list = Array.from(nodes || [])
+  if (!list.length || reducedMotion()) return
+
+  const items = []
+  for (const node of list) {
+    if (!(node instanceof Element)) continue
+    const r = node.getBoundingClientRect()
+    if (!r.height) continue
+    items.push({ node, top: r.top, left: r.left })
+  }
+  if (!items.length) return
+
+  /* 先整批遮隐，防止量位/排程期间新卡片被绘制出来 */
+  for (const it of items) it.node.style.opacity = '0'
+
+  let anims = []
+  try {
+    items.sort((a, b) => a.top - b.top || a.left - b.left)
+    anims = scheduleRows(groupRows(items))
+  } finally {
+    /* 同帧还原 inline；此后由动画 fill 控制初态，无残留内联样式 */
+    for (const it of items) it.node.style.opacity = ''
+  }
+
+  if (!anims.length) return
+  try {
+    await Promise.all(anims.map((a) => a.finished))
+  } catch {
+    /* 动画被中断（节点被移除 / 快速导航）时静默收尾 */
+  }
 }
