@@ -1,5 +1,5 @@
 ---
-title: 我尝尝追忆过去
+title: 我常常追忆过去
 date: 2026-08-03
 cover: https://cdn.luogu.com.cn/upload/image_hosting/u13zj6hn.png
 description: 👤 🔁🔁 🔙 💭 🚶 🏃
