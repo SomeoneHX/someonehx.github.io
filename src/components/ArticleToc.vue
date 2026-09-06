@@ -52,8 +52,8 @@ function scrollTo(id) {
   const el = document.getElementById(id)
   if (el) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    /* 地址栏同步 #id（replaceState 不产生历史），与正文标题 # 号行为闭环：
-       刷新/分享均保留小节位置 */
+    /* 地址栏同步 #id（replaceState 不产生历史）——「跳转」类动作由目录负责
+       记录位置；正文标题旁的 # 号只管复制链接、不改地址栏 */
     try {
       history.replaceState(null, '', `#${id}`)
     } catch {

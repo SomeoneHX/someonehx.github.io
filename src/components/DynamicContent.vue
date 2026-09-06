@@ -38,7 +38,8 @@ watch(
 
 /* 标题锚点：渲染出的 h2/h3/h4 带唯一 id（rehype-heading 生成，TOC 同源）。
    为每个标题追加一个可点击的「#」链接，hover 显示、点击复制带锚点的
-   完整 URL 并同步地址栏——分享到具体小节。注入幂等（重复渲染不叠加）。 */
+   完整 URL——「取链接」动作，不改地址栏（人已在标题旁，URL 同步交给
+   目录跳转负责）。注入幂等（重复渲染不叠加）。 */
 function injectHeadingAnchors() {
   const scope = root.value
   if (!scope || typeof document === 'undefined') return
@@ -62,11 +63,6 @@ async function onAnchorClick(e) {
   e.preventDefault()
   const hash = a.getAttribute('href')
   if (!hash || typeof location === 'undefined') return
-  try {
-    history.replaceState(null, '', hash)
-  } catch {
-    /* 忽略：地址栏同步失败不影响复制 */
-  }
   const ok = await copyText(`${location.origin}${location.pathname}${hash}`)
   const orig = a.textContent
   a.textContent = ok ? '✓' : '×'
