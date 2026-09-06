@@ -75,6 +75,11 @@ const skills = [
 const experiences = [
   {
     date: '2025',
+    title: 'LMCC',
+    description: '参加了CCF LMCC大模型能力认证。',
+  },
+  {
+    date: '2025',
     title: 'CSP-J',
     description: '获得CSP-J二等奖。',
   },
