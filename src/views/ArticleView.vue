@@ -1,5 +1,5 @@
 <template>
-  <article ref="rootRef" class="article" :style="flipStyle">
+  <article ref="rootRef" class="article">
     <div
       class="article__progress"
       :style="{ width: `${progress}%` }"
@@ -150,77 +150,106 @@ import { useRoute, useRouter } from 'vue-router'
 import DynamicContent from '@/components/DynamicContent.vue'
 import GiscusView from '@/components/GiscusView.vue'
 import ArticleToc from '@/components/ArticleToc.vue'
-import { takeCardRect } from '@/utils/cardStore'
+import { consumeFlipSource } from '@/utils/cardStore'
+import { runCardGrow, cancelCoverFlip } from '@/utils/coverMorph'
 import data from '@/generated/content.json'
 
 const route = useRoute()
 const router = useRouter()
 const rootRef = ref(null)
-const flipStyle = ref(null)
 const headings = ref([])
-const rect = takeCardRect()
 
-if (rect) {
-  const scrollingElement = document.scrollingElement || document.documentElement
-  scrollingElement.scrollTop = 0
-  scrollingElement.scrollLeft = 0
-  document.body.scrollTop = 0
-  document.body.scrollLeft = 0
-  document.documentElement.scrollTop = 0
-  document.documentElement.scrollLeft = 0
+/* 本次进入是否「封面卡片 FLIP」：consume 会消费 fresh 标志——
+   只有紧跟在卡片点击后的那次挂载能拿到 ctx（含被点卡片封面 rect），
+   相关文章/搜索直达等普通进入为 null，走常规卷帘进入
+   （pageEnter 负责滚顶/落位）。 */
+const flipCtx = consumeFlipSource()
 
-  const computedStyle = getComputedStyle(document.documentElement)
-  const navHeight = parseFloat(computedStyle.getPropertyValue('--nav-height')) || 56
-  const radiusMd = computedStyle.getPropertyValue('--radius-md').trim() || '12px'
-  const cardBg = computedStyle.getPropertyValue('--color-card-bg').trim() || '#ffffff'
-  const shadowMd = computedStyle.getPropertyValue('--shadow-md').trim() || '0 4px 16px rgba(0, 0, 0, 0.08)'
+/* 动画期间被锁定的滚动条状态（提前离开时在 onUnmounted 兜底恢复） */
+let overflowPrev = null
+/* 动画期间被临时隐藏的文章阅读进度条（fixed z120 > 垫底 z60，不藏会
+   在正向动画全程提前露出顶部 3px 强调线） */
+let zoomProgressEl = null
+let zoomDisposed = false
 
-  const finalW = window.innerWidth
-  const finalH = window.innerHeight - navHeight
-  const dx = rect.left
-  const dy = rect.top - navHeight
-  const sx = rect.width / finalW
-  const sy = rect.height / finalH
+/* 整卡拉伸过渡：被点卡片本体（整卡层，App leave 时已 clone 并与垫底里的
+   同一张卡片完全重合）从 cardRect 放大，卡片内封面/标题/日期/摘要/标签
+   全部一起放大，封面条落到文章 hero 位置后与真实文章页交接
+   （coverMorph.runCardGrow）。与返回的「画面收拢回卡片」机制同源。 */
+function runEnterZoom() {
+  const root = rootRef.value
+  if (!root || !flipCtx) return
 
-  flipStyle.value = {
-    transformOrigin: '0 0',
-    transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
-    background: cardBg,
-    borderRadius: radiusMd,
-    boxShadow: shadowMd,
-    overflow: 'hidden',
+  const reducedMotion =
+    typeof window !== 'undefined' &&
+    !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+  /* 文章从顶部展示（终点几何以滚顶为基准测量，防错位） */
+  const scroller = document.scrollingElement || document.documentElement
+  scroller.scrollTop = 0
+  window.scrollTo(0, 0)
+
+  if (reducedMotion) {
+    /* 减弱动效偏好：不做放大动画，清掉垫底等残留层直接静态呈现 */
+    cancelCoverFlip()
+    return
   }
 
-  const startTransform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+  const lockScroll = () => {
+    overflowPrev = document.documentElement.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    /* 隐藏阅读进度条，避免它作为 fixed z120 层穿到垫底之上 */
+    zoomProgressEl = root.querySelector('.article__progress')
+    if (zoomProgressEl) zoomProgressEl.style.opacity = '0'
+  }
+  const unlockScroll = () => {
+    if (overflowPrev !== null) {
+      document.documentElement.style.overflow = overflowPrev
+      overflowPrev = null
+    }
+    if (zoomProgressEl) {
+      zoomProgressEl.style.opacity = ''
+      zoomProgressEl = null
+    }
+  }
+  lockScroll()
 
-  onMounted(() => {
-    const el = rootRef.value
-    if (!el) return
-
-    requestAnimationFrame(() => {
-      flipStyle.value = { ...flipStyle.value, boxShadow: undefined }
-
-      const anim = el.animate([
-        {
-          transform: startTransform,
-          borderRadius: radiusMd,
-          background: cardBg,
-        },
-        {
-          transform: 'translate(0, 0) scale(1, 1)',
-          borderRadius: '0px',
-          background: 'transparent',
-        },
-      ], {
-        duration: 500,
-        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-      })
-
-      anim.finished.then(() => {
-        flipStyle.value = null
-      })
+  /* 正文由 DynamicContent 客户端解析 markdown，可能晚挂载一拍；用帧轮询
+     等 .article__body 出现内容（SSG 预渲染页首帧即有、立即通过；上限
+     ~240ms 后照常开启动画——正文若仍在渲染，动画期间会被盖住自然补出，
+     不阻塞观感）。除「卸载即停」外不做任何解码/超时等额外保险。 */
+  const bodyReady = () =>
+    new Promise((resolve) => {
+      const start = performance.now()
+      const tick = () => {
+        if (zoomDisposed) return resolve(false)
+        const b = root.querySelector('.article__body')
+        if ((b && b.textContent.trim()) || performance.now() - start > 240) {
+          resolve(true)
+          return
+        }
+        requestAnimationFrame(tick)
+      }
+      requestAnimationFrame(tick)
     })
-  })
+
+  ;(async () => {
+    const ready = await bodyReady()
+    /* 等待期间组件已被卸载：直接放弃，滚动由 onUnmounted 兜底恢复 */
+    if (!ready || zoomDisposed) return
+    try {
+      const ok = runCardGrow(root, { onDone: unlockScroll })
+      if (!ok) {
+        /* 引擎未接管（缺图标起点/元素异常）：解锁并清掉残留层 */
+        unlockScroll()
+        cancelCoverFlip()
+      }
+    } catch {
+      /* 引擎异常不得泄漏滚动锁 */
+      unlockScroll()
+      cancelCoverFlip()
+    }
+  })()
 }
 
 const article = computed(() =>
@@ -273,10 +302,21 @@ onMounted(() => {
   onScroll()
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('resize', onScroll)
+  if (flipCtx) runEnterZoom()
 })
 onUnmounted(() => {
+  zoomDisposed = true
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', onScroll)
+  /* 兜底：morph 中途离开时恢复被锁定的滚动条与临时隐藏的进度条 */
+  if (overflowPrev !== null) {
+    document.documentElement.style.overflow = overflowPrev
+    overflowPrev = null
+  }
+  if (zoomProgressEl) {
+    zoomProgressEl.style.opacity = ''
+    zoomProgressEl = null
+  }
 })
 
 function formatDate(date) {

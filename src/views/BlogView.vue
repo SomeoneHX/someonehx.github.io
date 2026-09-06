@@ -26,6 +26,7 @@
           :key="article.slug"
           :article="article"
           @tagClick="goToTag"
+          @open="captureView"
         />
       </div>
       <p v-else class="blog__empty">暂无文章</p>
@@ -39,9 +40,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArticleCard from '@/components/ArticleCard.vue'
+import { setFlipView, getFlipCtx } from '@/utils/cardStore'
+import { runBackFlip, getActiveMode } from '@/utils/coverMorph'
 import data from '@/generated/content.json'
 
 const PAGE_STEP = 6
@@ -92,6 +95,44 @@ watch(
     visibleCount.value = PAGE_STEP
   }
 )
+
+/* 卡片点击跳转前补记本列表视图状态（展开篇数），返回收拢时恢复 */
+function captureView() {
+  setFlipView({ visibleCount: visibleCount.value })
+}
+
+const waitFrames = (n = 1) =>
+  new Promise((r) => {
+    let left = n
+    const tick = () => (--left <= 0 ? r() : requestAnimationFrame(tick))
+    requestAnimationFrame(tick)
+  })
+
+/* 反向收拢：文章页 leave 时把视口画面做成快照窗，本页挂载后静置于窗下；
+   恢复分页与滚动，让来源卡片回到点击时的位置，再把快照窗收拢进卡片。
+   判定依据：本次过渡确为反向（getActiveMode==='back'）且目标路径就是
+   该快照的来源路径（防止普通导航误触发恢复/收拢） */
+onMounted(async () => {
+  const ctx = getFlipCtx()
+  if (!ctx || route.fullPath !== ctx.from || getActiveMode() !== 'back') return
+
+  /* 先恢复分页（比 PAGE_STEP 多时需要多渲染几行） */
+  if (ctx.view && typeof ctx.view.visibleCount === 'number' && ctx.view.visibleCount > PAGE_STEP) {
+    visibleCount.value = ctx.view.visibleCount
+  }
+  await nextTick()
+
+  /* 恢复来源滚动位置：ctx.coverRect 是点击时的视口坐标，滚动一致才能对齐 */
+  const scroller = document.scrollingElement || document.documentElement
+  scroller.scrollTop = ctx.scrollY || 0
+
+  /* 静置两帧让恢复后的列表稳定（快照窗此时仍盖住屏幕，无可见跳变） */
+  await waitFrames(2)
+
+  /* 收拢进整张卡片（cardRect）——文章画面缩回卡片外框整体；
+     无 cardRect 时退回收进封面条 */
+  runBackFlip(ctx.cardRect || ctx.coverRect)
+})
 </script>
 
 <style scoped>
