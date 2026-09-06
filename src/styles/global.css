@@ -44,6 +44,34 @@ body {
   padding-top: var(--space-lg);
 }
 
+/* ---- 慢动作模式（按住 Shift，slowMotion.js 切换 html.slow-mo）----
+   WAAPI 动画由 slowMotion.js 用 playbackRate 统一降速，不依赖本块；
+   这里只做两件事：
+   1) 把 --transition-* 两个时长令牌放大 4 倍 —— 走令牌的 CSS 过渡
+      （卡片/链接 hover 等微交互）也随之变慢；
+   2) 右下角显示「慢动作」小徽标，提示当前处于降速态。 */
+html.slow-mo {
+  --transition-fast: 600ms ease;
+  --transition-base: 900ms ease;
+}
+
+html.slow-mo::after {
+  content: '慢动作';
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 999;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-bg-warm);
+  background: var(--color-gray-900);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
 /* PWA 新版本更新提示（main.js 动态注入） */
 .app-toast {
   position: fixed;

@@ -25,12 +25,22 @@
 import NavBar from '@/components/NavBar.vue'
 import FooterBar from '@/components/FooterBar.vue'
 import CursorFX from '@/components/CursorFX.vue'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSeoHead } from '@/composables/useSeoHead'
 import { peekCardRect } from '@/utils/cardStore'
 import { mountFlipGhost, removeFlipGhost } from '@/utils/flipGhost'
 import { leaveFade, pageEnter } from '@/utils/pageTransition'
+import { registerSlowMotion } from '@/utils/slowMotion'
 
 useSeoHead()
+
+/* 慢动作（欣赏模式）：按住 Shift 后触发的动画以 0.25× 播放，松开恢复；
+   Shift+点击站内链接 → 站内慢速导航（避免浏览器默认新开窗口/标签）。
+   文章卡片例外：慢动作激活时 ArticleCard 自己放行 Shift+点击并存 rect，
+   走原生 FLIP 路径，这里只管普通站内链接 */
+const router = useRouter()
+onMounted(() => registerSlowMotion({ navigate: (href) => router.push(href) }))
 
 /* 本次路由切换是否来自文章卡片点击（FLIP 进入）。
    探测时机：旧页开始离开、新组件尚未 setup 消费 card rect —— 只能看不能取。 */

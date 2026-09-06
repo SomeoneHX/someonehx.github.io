@@ -44,6 +44,7 @@
 
 <script setup>
 import { saveCardRect } from '@/utils/cardStore'
+import { isSlowMotion } from '@/utils/slowMotion'
 
 defineProps({
   article: { type: Object, required: true },
@@ -52,7 +53,10 @@ defineProps({
 defineEmits(['tagClick'])
 
 function handleCardClick(event, navigate) {
-  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey) return
+  /* 慢动作激活时放行 Shift+点击：照常走本卡片的 rect 保存 + navigate，
+     保证 FLIP 分支完整（shift+click 让位浏览器默认的习惯仅限非慢动作态） */
+  if (event.shiftKey && !isSlowMotion()) return
   event.preventDefault()
   saveCardRect(event.currentTarget.getBoundingClientRect())
   navigate()
