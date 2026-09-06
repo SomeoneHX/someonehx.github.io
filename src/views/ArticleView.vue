@@ -191,6 +191,27 @@ if (rect) {
   const winH0 = rect.height
   /* 文章放大时长(WAAPI 与垫底快照退场共用单一来源) */
   const FLIP_MS = 500
+  /* 圆角数值基准(px):文章卡片 border-radius = --radius-md(12px) */
+  const R0 = parseFloat(radiusMd) || 0
+  /* 圆角独立动画的分段数:段内 border-radius 线性插值而 scale 走缓动曲线,
+     段数太少会在开头段产生 ~1px 鼓包;24 段把段内偏差压到 0.3px 内 */
+  const RADIUS_SEGMENTS = 24
+  /* 数值求解 cubic-bezier(0.22, 1, 0.36, 1) 的 y(x):即主变换动画在时间 x
+     处的进度 f(二分反解 bezier 参数),供圆角关键帧按真实时间轴排布 */
+  const bezierY = (p1x, p1y, p2x, p2y, x) => {
+    let lo = 0
+    let hi = 1
+    for (let k = 0; k < 24; k++) {
+      const m = (lo + hi) / 2
+      const om = 1 - m
+      const bx = 3 * om * om * m * p1x + 3 * om * m * m * p2x + m * m * m
+      if (bx < x) lo = m
+      else hi = m
+    }
+    const t = (lo + hi) / 2
+    const om = 1 - t
+    return 3 * om * om * t * p1y + 3 * om * t * t * p2y + t * t * t
+  }
 
   /* FLIP 几何:内容按宽度等比缩放(s0→1),高度不参与缩放、而是被「窗口」
      裁切——布局高 = 窗口视觉高 / 当前缩放(缩放让视觉尺寸 = 布局 × scale)。
@@ -201,7 +222,9 @@ if (rect) {
     transformOrigin: '0 0',
     transform: `translate(${dx}px, ${dy}px) scale(${s0})`,
     background: cardBg,
-    borderRadius: radiusMd,
+    /* 圆角补偿缩放:布局圆角 = R0 / s0,乘上当前 scale(s0) 后视觉恰为卡片圆角
+       R0(12px)—— 首帧与卡片圆角无缝衔接;动画期间由独立 radiusAnim 接管 */
+    borderRadius: R0 > 0 ? `${R0 / s0}px` : radiusMd,
     boxShadow: shadowMd,
     overflow: 'hidden',
     height: `${Math.ceil(winH0 / s0)}px`,
@@ -221,13 +244,14 @@ if (rect) {
 
       const anim = el.animate([
         {
+          /* 圆角不放这里插值:transform 缩放会连带缩放 CSS 圆角,若随主曲线线性
+             插值(CSS 坐标 R0→0),首帧视觉圆角 = R0×s0 ≪ 卡片圆角、几乎全程
+             直角。圆角改由下方独立 radiusAnim 按「视觉圆角平滑收直」驱动 */
           transform: startTransform,
-          borderRadius: radiusMd,
           background: cardBg,
         },
         {
           transform: 'translate(0, 0) scale(1)',
-          borderRadius: '0px',
           /* 不透明收尾(非 transparent):动画全程自带纸底,垫底列表只在文章
              几何外可见,铺满瞬间列表恰好被完全盖住,移除快照无感知 */
           background: pageBg,
@@ -236,6 +260,26 @@ if (rect) {
         duration: FLIP_MS,
         easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
       })
+
+      /* 圆角独立动画:让「视觉圆角」从卡片圆角 R0 平滑单调收至直角 0,而非
+         CSS 圆角线性衰减(那样视觉上会被 scale 压成全程近直角)。
+         关键帧沿时间轴取 N 等分点:先按主变换 easing 反解该时刻进度 f,再令
+         border-radius = R0·(1-f)/scale(f) —— 恰好抵消缩放,视觉圆角全程
+         ≈ R0·(1-f) 线性衰减(段内线性近似,误差亚像素)。与主动画同刻创建、
+         同 duration,结束与慢动作 playbackRate 天然同步 */
+      el.animate(
+        Array.from({ length: RADIUS_SEGMENTS + 1 }, (_, i) => {
+          const t = i / RADIUS_SEGMENTS
+          const f = bezierY(0.22, 1, 0.36, 1, t)
+          const s = s0 + (1 - s0) * f
+          return {
+            offset: t,
+            easing: 'linear',
+            borderRadius: `${((R0 * (1 - f)) / s).toFixed(3)}px`,
+          }
+        }),
+        { duration: FLIP_MS, easing: 'linear' }
+      )
 
       /* 高度窗口与 transform 共用同一条(已缓动的)进度:每帧读动画进度,
          布局高 = 窗口视觉高 / 当前缩放,裁切线贴紧窗口下缘,无压扁无溢出。
