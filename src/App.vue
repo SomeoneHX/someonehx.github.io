@@ -27,6 +27,7 @@ import FooterBar from '@/components/FooterBar.vue'
 import CursorFX from '@/components/CursorFX.vue'
 import { useSeoHead } from '@/composables/useSeoHead'
 import { peekCardRect } from '@/utils/cardStore'
+import { mountFlipGhost, removeFlipGhost } from '@/utils/flipGhost'
 import { leaveFade, pageEnter } from '@/utils/pageTransition'
 
 useSeoHead()
@@ -51,9 +52,14 @@ function onBeforeLeave() {
    后续所有导航也被 Transition 的占位符吞掉（URL 变了仍空白）。
    必须推迟到下一帧，等当前更新收尾。 */
 function onLeave(el, done) {
-  /* 旧页即将卸载：通知自定义指针解除吸附，避免残留变形框 */
+  /* 旧页即将卸载:通知自定义指针解除吸附,避免残留变形框 */
   window.dispatchEvent(new CustomEvent('cfx:leave'))
+  /* 任何离开先把可能的残留垫底快照清掉(上一次 FLIP 动画中断时的兜底) */
+  removeFlipGhost()
   if (flipNav) {
+    /* FLIP:旧列表页克隆为垫底快照垫在内容层下——列表不随卸载消失,
+       由文章从卡片位放大逐步盖住;动画结束 ArticleView 同帧移除 */
+    mountFlipGhost(el)
     requestAnimationFrame(() => done())
     return
   }

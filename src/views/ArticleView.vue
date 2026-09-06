@@ -151,6 +151,7 @@ import DynamicContent from '@/components/DynamicContent.vue'
 import GiscusView from '@/components/GiscusView.vue'
 import ArticleToc from '@/components/ArticleToc.vue'
 import { takeCardRect } from '@/utils/cardStore'
+import { removeFlipGhost, startGhostRetreat } from '@/utils/flipGhost'
 import data from '@/generated/content.json'
 
 const route = useRoute()
@@ -174,24 +175,39 @@ if (rect) {
   const radiusMd = computedStyle.getPropertyValue('--radius-md').trim() || '12px'
   const cardBg = computedStyle.getPropertyValue('--color-card-bg').trim() || '#ffffff'
   const shadowMd = computedStyle.getPropertyValue('--shadow-md').trim() || '0 4px 16px rgba(0, 0, 0, 0.08)'
+  /* 页面纸底:动画全程用作文章自身不透明背景——旧列表垫底快照在其几何外
+     露出、几何内绝不透出叠影;结束移除快照后文章背景转透明,透出的 body
+     底色与动画末帧同色,零跳变 */
+  const pageBg = computedStyle.getPropertyValue('--color-bg-warm').trim() || '#fefcf5'
 
   const finalW = window.innerWidth
   const finalH = window.innerHeight - navHeight
   const dx = rect.left
   const dy = rect.top - navHeight
-  const sx = rect.width / finalW
-  const sy = rect.height / finalH
+  /* 缩放系数仅由「宽度」决定(单一等比,不压扁):整体大小随宽度走,
+     形状始终真实——窗口视觉宽从卡片宽 → 文章宽 */
+  const s0 = rect.width / finalW
+  /* 裁切窗口的视觉高:起点 = 文章卡片高,随动画展开到首屏高 */
+  const winH0 = rect.height
+  /* 文章放大时长(WAAPI 与垫底快照退场共用单一来源) */
+  const FLIP_MS = 500
 
+  /* FLIP 几何:内容按宽度等比缩放(s0→1),高度不参与缩放、而是被「窗口」
+     裁切——布局高 = 窗口视觉高 / 当前缩放(缩放让视觉尺寸 = 布局 × scale)。
+     窗口视觉高从卡片高展开到首屏高:起点即「高裁成卡片、宽定整体大小」的
+     迷你文章(无压扁变形),放大过程裁切线始终贴窗口下缘;
+     动画结束 flipStyle 清空时盒高恢复全文、文档恢复滚动,顶部无跳变。 */
   flipStyle.value = {
     transformOrigin: '0 0',
-    transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
+    transform: `translate(${dx}px, ${dy}px) scale(${s0})`,
     background: cardBg,
     borderRadius: radiusMd,
     boxShadow: shadowMd,
     overflow: 'hidden',
+    height: `${Math.ceil(winH0 / s0)}px`,
   }
 
-  const startTransform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+  const startTransform = `translate(${dx}px, ${dy}px) scale(${s0})`
 
   onMounted(() => {
     const el = rootRef.value
@@ -200,6 +216,9 @@ if (rect) {
     requestAnimationFrame(() => {
       flipStyle.value = { ...flipStyle.value, boxShadow: undefined }
 
+      /* 同帧让垫底列表退场(整体轻微缩小 + 逐渐模糊),与文章放大互为纵深 */
+      startGhostRetreat({ duration: FLIP_MS })
+
       const anim = el.animate([
         {
           transform: startTransform,
@@ -207,18 +226,51 @@ if (rect) {
           background: cardBg,
         },
         {
-          transform: 'translate(0, 0) scale(1, 1)',
+          transform: 'translate(0, 0) scale(1)',
           borderRadius: '0px',
-          background: 'transparent',
+          /* 不透明收尾(非 transparent):动画全程自带纸底,垫底列表只在文章
+             几何外可见,铺满瞬间列表恰好被完全盖住,移除快照无感知 */
+          background: pageBg,
         },
       ], {
-        duration: 500,
+        duration: FLIP_MS,
         easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
       })
 
-      anim.finished.then(() => {
-        flipStyle.value = null
-      })
+      /* 高度窗口与 transform 共用同一条(已缓动的)进度:每帧读动画进度,
+         布局高 = 窗口视觉高 / 当前缩放,裁切线贴紧窗口下缘,无压扁无溢出。
+         直接写 DOM style(避免每帧触发 Vue re-render),结束统一清理 */
+      let rafId = 0
+      const applyWindow = (q) => {
+        const s = s0 + (1 - s0) * q
+        const winH = winH0 + (finalH - winH0) * q
+        el.style.height = `${winH / s}px`
+      }
+      const tick = () => {
+        rafId = 0
+        const timing = anim.effect?.getComputedTiming?.()
+        const q = timing ? timing.progress : null
+        if (q == null) return /* 动画被取消(组件卸载),停止跟随 */
+        if (q >= 1) {
+          applyWindow(1)
+          return
+        }
+        applyWindow(q)
+        rafId = requestAnimationFrame(tick)
+      }
+      rafId = requestAnimationFrame(tick)
+
+      anim.finished
+        .catch(() => {})
+        .then(() => {
+          /* 同 tick:先摘掉垫底快照(此刻文章仍是不透明 pageBg 铺满首屏),
+             再解除 transform/height/overflow —— 中间无绘制帧,文章背景
+             转透明透出的 body 纸底与 pageBg 同色,恢复全文高度与滚动 */
+          removeFlipGhost()
+          if (rafId) cancelAnimationFrame(rafId)
+          el.style.height = ''
+          flipStyle.value = null
+        })
     })
   })
 }
