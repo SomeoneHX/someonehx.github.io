@@ -5,6 +5,7 @@ cover: /covers/lgs-in-lg-user-script.png
 links:
   - label: 在洛谷查看
     url: https://www.luogu.com.cn/article/bq5o089x
+luoguArticle: bq5o089x
 description: 洛谷增强脚本，能够在洛谷内无缝访问所有保存站的文章、剪贴板和个人主页。
 tags: [洛谷, 保存站, 脚本]
 published: true

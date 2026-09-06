@@ -5,6 +5,18 @@ import matter from 'gray-matter'
 const articlesDir = resolve('content/articles')
 const outFile = resolve('src/generated/content.json')
 
+/* 把元数据里的洛谷文章绑定归一化为文章 ID。
+ * 支持裸 ID（bq5o089x）或常见链接（luogu.com.cn / luogu.store / 携带 article 参数的 URL）。 */
+function normalizeLuoguArticleId(value) {
+  if (!value) return null
+  const raw = String(value).trim()
+  if (/^[A-Za-z0-9]{1,8}$/.test(raw)) return raw
+  const m = raw.match(
+    /(?:[?&](?:article|id|articleId|lid)=|(?:^|\/)(?:article|blog)\/|#\/article\/)([A-Za-z0-9]{1,8})(?![A-Za-z0-9])/i
+  )
+  return m ? m[1] : null
+}
+
 function toPlainText(markdown) {
   return markdown
     .replace(/```[\s\S]*?```/g, '')
@@ -41,6 +53,7 @@ async function build() {
       pinned: !!data.pinned,
       description: data.description || '',
       links,
+      luoguArticle: normalizeLuoguArticleId(data.luoguArticle),
       markdown: content,
       text: toPlainText(content),
       wordCount: 0,

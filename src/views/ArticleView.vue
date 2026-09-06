@@ -126,7 +126,7 @@
           </nav>
 
           <ClientOnly>
-            <GiscusView :term="route.path" />
+            <GiscusView :term="route.path" :luogu-article="article.luoguArticle" />
           </ClientOnly>
         </div>
       </div>

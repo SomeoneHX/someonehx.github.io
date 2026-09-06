@@ -5,6 +5,7 @@ cover: /covers/vintage-brown.png
 links:
   - label: 在洛谷查看
     url: https://www.luogu.com.cn/article/bfubv5gh
+luoguArticle: bfubv5gh
 description: 在Windows98上访问洛谷！
 tags: [洛谷, Windows]
 published: true

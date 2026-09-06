@@ -56,6 +56,7 @@ slug: custom-slug
 | `published` | 否 | `false` 时为草稿，不会出现在站点上 |
 | `pinned` | 否 | `true` 时文章在「文章」列表中置顶（标签筛选与归档不受影响） |
 | `slug` | 否 | 自定义 URL，默认使用文件名 |
+| `luoguArticle` | 否 | 绑定洛谷文章 ID（或文章链接）。存在时评论栏会显示「Giscus / 洛谷评论」标签页，洛谷评论区经 [lgs-reply-viewer](https://github.com/SomeoneHX/lgs-reply-viewer) 只读嵌入 |
 
 开发时运行 `npm run dev`：保存、新增或删除文章后，内容数据会自动更新并刷新页面。部署前运行 `npm run build` 即可生成站点。
 
@@ -78,6 +79,14 @@ slug: custom-slug
 ```
 
 折叠框开合带平滑动画（`src/utils/boxFx.js`）：展开是**抽屉高度滑出**、内容从模糊聚焦变清晰（340ms）；收回反向——内容先模糊、同时高度合拢（260ms）。中途再次点击会从当前形态反向继续，不跳变；系统开启"减弱动态效果"时直接切换、无动画。
+
+### 洛谷评论区嵌入
+
+若文章同时发布在洛谷，可在 frontmatter 绑定 `luoguArticle`（文章 ID 或链接，构建时自动归一化为 ID）。该文章的评论栏会出现「Giscus / 洛谷评论」标签页切换：
+
+- 洛谷侧为**只读**展示，评论数据由 [洛谷保存站](https://api.luogu.me) 提供，无法在本站发布评论；Giscus 侧功能不变。
+- 实现：`src/components/LuoguCommentsView.vue` 以 iframe 嵌入 [lgs-reply-viewer](https://github.com/SomeoneHX/lgs-reply-viewer) 的 `#/embed` 页，主题跟随站点明暗切换，高度经 `postMessage`（`lgs-reply-viewer:resize`）自动适配，无内滚动条。
+- 未绑定 `luoguArticle` 的文章评论栏维持原样（仅 Giscus），不显示标签页。
 
 ## 自定义站点
 
@@ -109,7 +118,7 @@ slug: custom-slug
 |------|------|------|
 | `/` | HomeView | 主页：Bing 每日一图 + 个人资料 + 最新文章 |
 | `/blog/` | BlogView | 文章列表（2 列网格 + 加载更多） |
-| `/blog/:slug/` | ArticleView | 文章详情：FLIP 展开进入、目录、相关文章、上下篇、Giscus 评论区 |
+| `/blog/:slug/` | ArticleView | 文章详情：FLIP 展开进入、目录、相关文章、上下篇、评论区（Giscus；文章绑定洛谷 ID 时可切换「洛谷评论」） |
 | `/tags/` | TagsView | 标签云 |
 | `/tags/:tag/` | BlogView | 按标签筛选文章 |
 | `/about/` | AboutView | 关于页 |
@@ -189,7 +198,8 @@ someonehx.github.io/
 │   │   ├── ArticleCard.vue     # 文章卡片（FLIP 动画起点）
 │   │   ├── DynamicContent.vue  # 前端渲染 Markdown
 │   │   ├── ArticleToc.vue      # 文章目录
-│   │   ├── GiscusView.vue      # Giscus 评论区
+│   │   ├── GiscusView.vue      # 评论区容器（Giscus；绑定 luoguArticle 时含「洛谷评论」标签页）
+│   │   ├── LuoguCommentsView.vue # 洛谷评论只读嵌入（lgs-reply-viewer iframe，postMessage 自适应高度）
 │   │   ├── SearchModal.vue     # 全文搜索弹层
 │   │   ├── ImageViewer.vue     # 图片灯箱
 │   │   └── FooterBar.vue       # 页脚
