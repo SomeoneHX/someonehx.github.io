@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 /* iPadOS 风格自定义指针
  *
  * 视觉：系统光标隐藏，由一个大号空心圆环跟手移动（默认态）；当指针命中
@@ -29,8 +29,8 @@
  */
 import { onMounted, onUnmounted, ref } from 'vue'
 
-const root = ref(null)
-const glowRef = ref(null)   /* 吸附辉光子层（仅 snap 态可见，中心跟随鼠标） */
+const root = ref<HTMLElement | null>(null)
+const glowRef = ref<HTMLElement | null>(null)   /* 吸附辉光子层（仅 snap 态可见，中心跟随鼠标） */
 
 const RING = 26          /* 空闲态空心圆环外径（点击时缩为小实心点） */
 const LERP = 0.5         /* 浮点跟随阻尼：越大越跟手，0.5 有轻微触感 */
@@ -53,38 +53,40 @@ const INTERACTIVE_SEL =
 /* 需要让位系统光标的区域：输入控件 / 下拉 / 富文本 / 全屏查看器 / iframe */
 const NATIVE_SEL = 'input,textarea,select,[contenteditable="true"],.image-viewer,iframe'
 
+type CfxMode = 'off' | 'hidden' | 'float' | 'snap' | 'reverting'
+
 let on = false
-let mode = 'off'        /* off | hidden | float | snap | reverting */
+let mode: CfxMode = 'off'
 let rafId = 0
 let mouseX = -100
 let mouseY = -100
 let dotX = -100
 let dotY = -100
 let needHit = false
-let snapEl = null
+let snapEl: Element | null = null
 let lastSnapRadius = 0  /* 记录吸附时写的圆角，供缩回插值作为起点 */
-let revertFrom = null   /* {x,y,w,h,r,t0} 缩回插值的起点几何 */
-let el = null
-let glowEl = null        /* 辉光子层 DOM */
+let revertFrom: { x: number; y: number; w: number; h: number; r: number; t0: number } | null = null
+let el!: HTMLElement           /* enable() 时才赋值；此后仅在启用态使用 */
+let glowEl: HTMLElement | null = null /* 辉光子层 DOM */
 let glowX = 0            /* 光斑当前中心（相对吸附目标左上角，px） */
 let glowY = 0
 let glowD = 0            /* 光斑直径（吸附时按控件面积定一次） */
-let snapGeo = null       /* {left, top, w, h} 吸附框基础几何（viewport 坐标，含外扩） */
+let snapGeo: { left: number; top: number; w: number; h: number } | null = null /* 吸附框基础几何（viewport 坐标，含外扩） */
 let snapOwn = false      /* 吸附目标是否自带轮廓（有则不随光标位移、钉死贴合） */
 let snapAt = 0           /* 吸附开始的时刻（位移需等 morph 变形过渡结束后接管） */
 let snapDrifting = false /* 是否已从 CSS morph 切换到逐帧位移驱动 */
 let curOX = 0            /* 当前框位移（px，无轮廓目标的弹性跟随） */
 let curOY = 0
-let mqFine = null
-let mqReduce = null
+let mqFine!: MediaQueryList
+let mqReduce!: MediaQueryList
 let lastMoveAt = 0      /* 最后一次父文档 pointermove 时刻，供静默看门狗判定 */
-let iframeEls = []      /* 当前页面内 iframe（跨域文档：进入后父页面收不到指针事件） */
-let boundFrames = new WeakSet() /* 已直绑 mouseenter 的 iframe，防重复 */
+let iframeEls: HTMLIFrameElement[] = [] /* 当前页面内 iframe（跨域文档：进入后父页面收不到指针事件） */
+const boundFrames = new WeakSet<HTMLIFrameElement>() /* 已直绑 mouseenter 的 iframe，防重复 */
 let watchdogTimer = 0   /* 静默看门狗 interval */
 
 /* ---------- 工具 ---------- */
 
-function writeShape(w, h, r, x, y) {
+function writeShape(w: number, h: number, r: number, x: number, y: number): void {
   el.style.width = `${w}px`
   el.style.height = `${h}px`
   el.style.borderRadius = `${r}px`
@@ -92,12 +94,12 @@ function writeShape(w, h, r, x, y) {
 }
 
 /* 写光斑位置：以 (x, y)（相对吸附目标左上角）为光斑中心 */
-function writeGlow(x, y) {
-  glowEl.style.transform = `translate(${x - glowD / 2}px, ${y - glowD / 2}px)`
+function writeGlow(x: number, y: number): void {
+  glowEl!.style.transform = `translate(${x - glowD / 2}px, ${y - glowD / 2}px)`
 }
 
 /* 读取目标圆角（px），超大值（胶囊 9999px）clamp 到高的一半 */
-function radiusOf(node, w, h) {
+function radiusOf(node: Element, w: number, h: number): number {
   const m = /^([\d.]+)px/.exec(getComputedStyle(node).borderRadius || '')
   if (!m) return 8
   return Math.min(parseFloat(m[1]), Math.min(w, h) / 2)
@@ -106,7 +108,7 @@ function radiusOf(node, w, h) {
 /* 目标是否「自带轮廓」：可见边框 / 背景图 / 非透明背景色（含实色 rgb）。
    自带轮廓的目标（按钮、带背景胶囊等）吸附框贴合原始尺寸圆角；
    否则（裸文本链接等）吸附框外扩并补圆角，形成 iPadOS 式包裹框。 */
-function hasOwnOutline(node) {
+function hasOwnOutline(node: Element): boolean {
   const cs = getComputedStyle(node)
   if (cs.borderTopStyle !== 'none' && parseFloat(cs.borderTopWidth) > 0) return true
   if (cs.backgroundImage !== 'none') return true
@@ -117,20 +119,20 @@ function hasOwnOutline(node) {
   return !m || parseFloat(m[1]) > 0
 }
 
-function easeOutCubic(t) {
+function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3)
 }
 
-function visibility() {
+function visibility(): void {
   el.classList.toggle('cfx-visible', mode !== 'off' && mode !== 'hidden')
 }
 
-function startLoop() {
+function startLoop(): void {
   if (rafId) return
   rafId = requestAnimationFrame(frame)
 }
 
-function stopLoop() {
+function stopLoop(): void {
   if (rafId) {
     cancelAnimationFrame(rafId)
     rafId = 0
@@ -139,7 +141,7 @@ function stopLoop() {
 
 /* ---------- 状态机 ---------- */
 
-function hitTest() {
+function hitTest(): void {
   /* hidden/off 态先由 onMove 切回 float 再进这里；reverting 中允许被新目标重新吸附 */
   if (mode !== 'float' && mode !== 'snap' && mode !== 'reverting') return
 
@@ -161,7 +163,7 @@ function hitTest() {
   if (mode === 'snap' || mode === 'reverting') revertToMouse()
 }
 
-function doSnap(it) {
+function doSnap(it: Element): void {
   const r = it.getBoundingClientRect()
   if (!r.width || !r.height) return
 
@@ -196,8 +198,8 @@ function doSnap(it) {
     GLOW_MIN,
     Math.min(GLOW_MAX, Math.round(Math.sqrt(r.width * r.height) * GLOW_F))
   )
-  glowEl.style.width = `${glowD}px`
-  glowEl.style.height = `${glowD}px`
+  glowEl!.style.width = `${glowD}px`
+  glowEl!.style.height = `${glowD}px`
   glowX = mouseX - x
   glowY = mouseY - y
   writeGlow(glowX, glowY)
@@ -207,7 +209,7 @@ function doSnap(it) {
 /* 移开吸附目标：逐帧插值缩回圆点。起点 = 当前吸附形状；
    终点 = 每帧都取「最新鼠标坐标」——回退途中鼠标继续移动也会被圆点追上，
    不会出现圆点卡在组件边缘滑向过期坐标的断层。 */
-function revertToMouse() {
+function revertToMouse(): void {
   if (mode !== 'snap') return
   const cur = el.getBoundingClientRect()
   snapEl = null
@@ -226,7 +228,7 @@ function revertToMouse() {
 
 /* 场景突变（滚动/缩放/路由切换）→ 吸附形状已无意义，直接瞬移成圆点跟手，
    不做从远处滑回的动画 */
-function snapAbort() {
+function snapAbort(): void {
   if (mode !== 'snap' && mode !== 'reverting') return
   snapEl = null
   mode = 'float'
@@ -238,7 +240,7 @@ function snapAbort() {
   startLoop()
 }
 
-function toHidden() {
+function toHidden(): void {
   if (mode === 'hidden') return
   stopLoop()
   snapEl = null
@@ -250,7 +252,7 @@ function toHidden() {
 }
 
 /* 每帧：命中检测 + 形态/位置插值（缩回期与浮点期共用一帧循环） */
-function frame() {
+function frame(): void {
   rafId = requestAnimationFrame(frame)
   if (needHit) {
     needHit = false
@@ -259,17 +261,17 @@ function frame() {
 
   /* 缩回插值：从吸附形状（矩形）ease-out 缩回圆点，终点实时追最新鼠标坐标 */
   if (mode === 'reverting') {
-    const t = (performance.now() - revertFrom.t0) / REVERT_MS
+    const t = (performance.now() - revertFrom!.t0) / REVERT_MS
     const e = t >= 1 ? 1 : easeOutCubic(t)
     const h = RING / 2
     const tx = mouseX - h
     const ty = mouseY - h
     writeShape(
-      revertFrom.w + (RING - revertFrom.w) * e,
-      revertFrom.h + (RING - revertFrom.h) * e,
-      revertFrom.r + (h - revertFrom.r) * e,
-      revertFrom.x + (tx - revertFrom.x) * e,
-      revertFrom.y + (ty - revertFrom.y) * e
+      revertFrom!.w + (RING - revertFrom!.w) * e,
+      revertFrom!.h + (RING - revertFrom!.h) * e,
+      revertFrom!.r + (h - revertFrom!.r) * e,
+      revertFrom!.x + (tx - revertFrom!.x) * e,
+      revertFrom!.y + (ty - revertFrom!.y) * e
     )
     if (t < 1) return
     mode = 'float'
@@ -342,7 +344,7 @@ function frame() {
 
 /* ---------- 事件 ---------- */
 
-function onMove(e) {
+function onMove(e: PointerEvent): void {
   if (!on) return
   mouseX = e.clientX
   mouseY = e.clientY
@@ -351,7 +353,7 @@ function onMove(e) {
      尤其 iframe：一旦进入其内部，父文档收不到后续 pointermove，若在此把圆点
      拉回 float，它会残留在边界坐标上「悬浮」——命中检测已失效救不回来。 */
   const t = e.target
-  if (t && typeof t.closest === 'function' && t.closest(NATIVE_SEL)) {
+  if (t instanceof Element && t.closest(NATIVE_SEL)) {
     toHidden()
     needHit = false
     return
@@ -369,21 +371,21 @@ function onMove(e) {
   startLoop()
 }
 
-function onDocLeave() {
+function onDocLeave(): void {
   if (on && mode !== 'hidden') toHidden()
 }
 
 /* 尽力而为的边界拦截：指针可见地落在 iframe/输入区元素上时立即隐藏。
    普通 DOM 元素用 closest 判断；giscus-widget 这类 Shadow DOM 宿主里的
    iframe 事件会被 retarget、closest 查不到，需用坐标深穿透 topIframeAt 补查。 */
-function onDocOver(e) {
+function onDocOver(e: MouseEvent): void {
   if (!on) return
   const t = e.target
-  if (t && typeof t.closest === 'function' && t.closest(NATIVE_SEL)) {
+  if (t instanceof Element && t.closest(NATIVE_SEL)) {
     toHidden()
     return
   }
-  if (t && topIframeAt(e.clientX, e.clientY, t)) toHidden()
+  if (t instanceof Element && topIframeAt(e.clientX, e.clientY, t)) toHidden()
 }
 
 /* ---------- iframe 失联兜底 ----------
@@ -402,13 +404,13 @@ function onDocOver(e) {
    - from 带 open shadowRoot（如 <giscus-widget>）→ 逐层深入 shadow 内
      elementFromPoint，找到内部 iframe 才算命中（事件虽被 retarget，几何不骗人）。
    其余情况返回 null。 */
-function topIframeAt(x, y, from) {
+function topIframeAt(x: number, y: number, from: Element | null): Element | null {
   if (!from) return null
   if (from.tagName === 'IFRAME') return from
   if (!from.shadowRoot) return null
-  let doc = from.shadowRoot
+  let doc: Document | ShadowRoot = from.shadowRoot
   for (let i = 0; i < 6; i++) {
-    const n = doc.elementFromPoint(x, y)
+    const n: Element | null = doc.elementFromPoint(x, y)
     if (!n) return null
     if (n.tagName === 'IFRAME') return n
     if (n.shadowRoot) {
@@ -422,15 +424,15 @@ function topIframeAt(x, y, from) {
 
 /* 递归收集普通 DOM 与所有 open shadow root 内的 iframe（全量 DFS，
    由看门狗低频调用；WeakSet 防重复绑定 mouseenter） */
-function scanIframes() {
-  const found = []
-  const walk = (root) => {
-    for (const el of root.querySelectorAll('*')) {
-      if (el.tagName === 'IFRAME') {
-        found.push(el)
+function scanIframes(): void {
+  const found: HTMLIFrameElement[] = []
+  const walk = (rootNode: Document | ShadowRoot): void => {
+    for (const node of rootNode.querySelectorAll('*')) {
+      if (node.tagName === 'IFRAME') {
+        found.push(node as HTMLIFrameElement)
         continue
       }
-      if (el.shadowRoot) walk(el.shadowRoot)
+      if (node.shadowRoot) walk(node.shadowRoot)
     }
   }
   walk(document)
@@ -442,11 +444,11 @@ function scanIframes() {
   }
 }
 
-function onFrameEnter() {
+function onFrameEnter(): void {
   if (on) toHidden()
 }
 
-function withinIframe(x, y, pad = 6) {
+function withinIframe(x: number, y: number, pad = 6): boolean {
   for (const f of iframeEls) {
     if (!f.isConnected) continue
     const r = f.getBoundingClientRect()
@@ -460,7 +462,7 @@ function withinIframe(x, y, pad = 6) {
 
 let scanCounter = 0
 
-function watchdogTick() {
+function watchdogTick(): void {
   if (!on) return
   /* 低频全量重扫（~每 500ms）：Giscus iframe 是懒加载 + Shadow DOM 动态挂载，
      出现后最多 500ms 内被发现并直绑 mouseenter */
@@ -480,25 +482,25 @@ function watchdogTick() {
   }
 }
 
-function startWatchdog() {
+function startWatchdog(): void {
   if (watchdogTimer) return
-  watchdogTimer = setInterval(watchdogTick, 120)
+  watchdogTimer = window.setInterval(watchdogTick, 120)
 }
 
-function stopWatchdog() {
+function stopWatchdog(): void {
   if (watchdogTimer) {
-    clearInterval(watchdogTimer)
+    window.clearInterval(watchdogTimer)
     watchdogTimer = 0
   }
 }
 
 /* 路由即将切换（旧页元素将卸载）→ 瞬移回圆点，避免残留变形框 */
-function onRouteLeave() {
+function onRouteLeave(): void {
   if (on && (mode === 'snap' || mode === 'reverting')) snapAbort()
 }
 
 /* 新页入场稳定后 → 重新扫描 iframe 并以当前指针位置重新命中检测 */
-function onRouteChange() {
+function onRouteChange(): void {
   if (!on) return
   scanIframes()
   if (mode !== 'float') return
@@ -506,21 +508,21 @@ function onRouteChange() {
   startLoop()
 }
 
-function onDown() {
+function onDown(): void {
   if (on && mode !== 'hidden') el.classList.add('cfx-press')
 }
-function onUp() {
+function onUp(): void {
   if (on) el.classList.remove('cfx-press')
 }
 
 /* 滚动 / 缩放使吸附目标位置变化 → 瞬移回圆点跟手（不做从远处滑回的动画） */
-function onViewChange() {
+function onViewChange(): void {
   if (on && (mode === 'snap' || mode === 'reverting')) snapAbort()
 }
 
 /* ---------- 启停（仅客户端） ---------- */
 
-function bind() {
+function bind(): void {
   window.addEventListener('pointermove', onMove, { passive: true })
   window.addEventListener('pointerdown', onDown, true)
   window.addEventListener('pointerup', onUp, true)
@@ -532,7 +534,7 @@ function bind() {
   window.addEventListener('cfx:routechange', onRouteChange)
 }
 
-function unbind() {
+function unbind(): void {
   window.removeEventListener('pointermove', onMove)
   window.removeEventListener('pointerdown', onDown, true)
   window.removeEventListener('pointerup', onUp, true)
@@ -544,7 +546,7 @@ function unbind() {
   window.removeEventListener('cfx:routechange', onRouteChange)
 }
 
-function enable() {
+function enable(): void {
   if (on || !root.value) return
   if (!mqFine.matches || mqReduce.matches) return
   on = true
@@ -559,7 +561,7 @@ function enable() {
   bind()
 }
 
-function disable() {
+function disable(): void {
   if (!on) return
   on = false
   stopLoop()
@@ -573,7 +575,7 @@ function disable() {
   }
 }
 
-function onMqChange() {
+function onMqChange(): void {
   if (mqFine.matches && !mqReduce.matches) enable()
   else disable()
 }

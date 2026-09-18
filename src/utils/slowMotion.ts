@@ -18,23 +18,30 @@
 const DEFAULT_FACTOR = 0.25 /* 0.25 = 4 倍慢；改这里即可调整速率 */
 const KEY = 'Shift'
 
+type PatchedAnimate = ((
+  this: Element,
+  keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+  options?: number | KeyframeAnimationOptions
+) => Animation) & { __slowMoPatched?: boolean }
+
 let active = false
 let factor = DEFAULT_FACTOR
-let navigate = null /* 站内慢速导航回调（App 注入 router.push） */
+let navigate: ((href: string) => void) | null = null /* 站内慢速导航回调（App 注入 router.push） */
 let registered = false
 
-const live = new Set() /* 尚未结束/取消的动画 */
+const live = new Set<Animation>() /* 尚未结束/取消的动画 */
 
-export function isSlowMotion() {
+export function isSlowMotion(): boolean {
   return active
 }
 
-function patchAnimate() {
+function patchAnimate(): void {
   if (typeof Element === 'undefined') return
-  if (Element.prototype.animate.__slowMoPatched) return
-  Element.prototype.animate.__slowMoPatched = true
-  const orig = Element.prototype.animate
-  Element.prototype.animate = function (keyframes, options) {
+  const proto = Element.prototype as unknown as { animate: PatchedAnimate }
+  if (proto.animate.__slowMoPatched) return
+  proto.animate.__slowMoPatched = true
+  const orig: PatchedAnimate = proto.animate
+  proto.animate = function (keyframes, options) {
     const anim = orig.call(this, keyframes, options)
     if (active) anim.playbackRate = factor
     const release = () => live.delete(anim)
@@ -45,7 +52,7 @@ function patchAnimate() {
   }
 }
 
-function apply() {
+function apply(): void {
   document.documentElement.classList.toggle('slow-mo', active)
   for (const anim of live) {
     try {
@@ -56,14 +63,14 @@ function apply() {
   }
 }
 
-function setSlow(on) {
+function setSlow(on: boolean): void {
   if (active === on) return
   active = on
   apply()
 }
 
 /* 在输入框/富文本里按住 Shift 是打大写/选字，不当作慢动作开关 */
-function inEditable(t) {
+function inEditable(t: EventTarget | null): boolean {
   return (
     !!t &&
     t instanceof HTMLElement &&
@@ -74,28 +81,28 @@ function inEditable(t) {
   )
 }
 
-function onKeyDown(e) {
+function onKeyDown(e: KeyboardEvent): void {
   if (e.key !== KEY || e.repeat || active) return
   if (inEditable(e.target)) return
   setSlow(true)
 }
 
-function onKeyUp(e) {
+function onKeyUp(e: KeyboardEvent): void {
   if (e.key !== KEY) return
   setSlow(false)
 }
 
-function reset() {
+function reset(): void {
   setSlow(false)
 }
 
 /* Shift+点击站内链接：改成站内慢速导航（见文件头注释） */
-function onClick(e) {
+function onClick(e: MouseEvent): void {
   if (!active || !e.shiftKey || !navigate) return
   if (e.metaKey || e.ctrlKey || e.altKey) return /* 保留新开标签等系统组合 */
   const t = e.target
   if (!(t instanceof Element)) return
-  const a = t.closest('a[href]')
+  const a = t.closest('a[href]') as HTMLAnchorElement | null
   if (!a) return
   const href = a.getAttribute('href') || ''
   if (href.startsWith('http') || href.startsWith('//')) return
@@ -110,12 +117,12 @@ function onClick(e) {
 
 /**
  * 启用慢动作。幂等：重复调用只更新参数，不重复挂监听。
- * @param {object} [opts]
- * @param {number} [opts.factor] 播放速率（0.25 = 4 倍慢）
- * @param {(href: string) => void} [opts.navigate]
- *   Shift+点击站内链接时的导航回调（不含文章卡片，卡片由 ArticleCard 处理）
+ * @param opts.factor 播放速率（0.25 = 4 倍慢）
+ * @param opts.navigate Shift+点击站内链接时的导航回调（不含文章卡片，卡片由 ArticleCard 处理）
  */
-export function registerSlowMotion(opts = {}) {
+export function registerSlowMotion(
+  opts: { factor?: number; navigate?: (href: string) => void } = {}
+): void {
   if (registered) {
     if (typeof opts.factor === 'number') factor = opts.factor
     if (typeof opts.navigate === 'function') navigate = opts.navigate

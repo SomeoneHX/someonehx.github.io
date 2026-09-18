@@ -3,7 +3,6 @@ import { useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import data from '@/generated/content.json'
 import {
-  SITE_URL,
   SITE_NAME,
   SITE_DESCRIPTION,
   DEFAULT_OG_IMAGE,
@@ -11,13 +10,39 @@ import {
   absoluteUrl,
 } from '@/site'
 
-function excerpt(text, max = 120) {
+interface HeadMetaEntry {
+  name?: string
+  property?: string
+  content: string
+  /* unhead 的 meta 类型带 data-* 动态键索引签名，此处对齐 */
+  [key: `data-${string}`]: string | undefined
+}
+
+interface ToHeadOptions {
+  title: string
+  description: string
+  type?: string
+  image?: string
+  path: string
+  publishedTime?: string
+  noindex?: boolean
+}
+
+function excerpt(text: string | null | undefined, max = 120): string {
   const t = (text || '').replace(/\s+/g, ' ').trim()
   return t.length > max ? `${t.slice(0, max)}…` : t
 }
 
-function toHead({ title, description, type = 'website', image, path, publishedTime, noindex }) {
-  const meta = [
+function toHead({
+  title,
+  description,
+  type = 'website',
+  image,
+  path,
+  publishedTime,
+  noindex,
+}: ToHeadOptions) {
+  const meta: HeadMetaEntry[] = [
     { name: 'description', content: description },
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
@@ -46,7 +71,7 @@ function toHead({ title, description, type = 'website', image, path, publishedTi
   }
 }
 
-function safeDecode(s) {
+function safeDecode(s: string): string {
   try {
     return decodeURIComponent(s)
   } catch {
@@ -54,9 +79,9 @@ function safeDecode(s) {
   }
 }
 
-const withSite = (t) => `${t} | ${SITE_NAME}`
+const withSite = (t: string) => `${t} | ${SITE_NAME}`
 
-export function useSeoHead() {
+export function useSeoHead(): void {
   const route = useRoute()
 
   const head = computed(() => {
@@ -128,7 +153,7 @@ export function useSeoHead() {
     }
 
     // 静态页面
-    const statics = {
+    const statics: Record<string, { title: string; desc: string }> = {
       '/archives/': { title: '归档', desc: `${SITE_NAME} 的文章归档。` },
       '/about/': { title: '关于', desc: `关于 ${SITE_NAME}。` },
       '/guestbook/': { title: '留言板', desc: `在 ${SITE_NAME} 的留言板留下想说的话。` },

@@ -25,7 +25,7 @@
           <li
             v-for="(item, i) in results"
             :key="item.slug"
-            :ref="i === selectedIndex ? selectedRef : undefined"
+            :ref="i === selectedIndex ? setSelectedRef : undefined"
             class="search-modal__item"
             :class="{ 'search-modal__item--selected': i === selectedIndex }"
             @click="openArticle(item.slug)"
@@ -50,34 +50,43 @@
   </Teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { useRouter } from 'vue-router'
 import Fuse from 'fuse.js'
 import data from '@/generated/content.json'
+import type { Article } from '@/types'
 
 const router = useRouter()
 
-const props = defineProps({
-  visible: Boolean,
-})
+const props = defineProps<{
+  visible: boolean
+}>()
 
-const emit = defineEmits(['close'])
+const emit = defineEmits<{
+  close: []
+}>()
 
 const query = ref('')
 const selectedIndex = ref(0)
-const inputRef = ref(null)
-const listRef = ref(null)
-const selectedRef = ref(null)
+const inputRef = ref<HTMLInputElement | null>(null)
+const selectedRef = ref<HTMLElement | null>(null)
+
+/* 函数 ref：vue-tsc 按「解包后的值」检查 :ref 表达式，ref 对象直接绑定会类型不匹配；
+   运行时行为与绑定 ref 对象等价（把当前选中项元素存进 selectedRef） */
+function setSelectedRef(el: Element | ComponentPublicInstance | null): void {
+  selectedRef.value = (el as HTMLElement) ?? null
+}
 
 const results = computed(() => {
-  if (!query.value.trim()) return []
+  if (!query.value.trim() || !fuse) return []
   return fuse.search(query.value.trim()).map(r => r.item)
 })
 
-let fuse = null
+let fuse: Fuse<Article> | null = null
 
-function buildIndex() {
+function buildIndex(): void {
   fuse = new Fuse(data.articles, {
     keys: [
       { name: 'title', weight: 3 },
@@ -100,7 +109,7 @@ watch(() => props.visible, async (v) => {
   }
 })
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent): void {
   if (e.key === 'ArrowDown') {
     e.preventDefault()
     selectedIndex.value = Math.min(selectedIndex.value + 1, results.value.length - 1)
@@ -116,16 +125,17 @@ function onKeydown(e) {
   }
 }
 
-function openArticle(slug) {
+function openArticle(slug: string): void {
   close()
   router.push(`/blog/${slug}/`)
 }
 
-function close() {
+function close(): void {
   emit('close')
 }
 
-function formatDate(date) {
+function formatDate(date: string | null): string {
+  if (!date) return ''
   return new Date(date).toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',

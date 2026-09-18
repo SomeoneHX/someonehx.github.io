@@ -21,19 +21,29 @@
   </nav>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import type { Heading } from '@/types'
 
-const props = defineProps({
-  headings: { type: Array, default: () => [] },
-  minDepth: { type: Number, default: 1 },
-  maxDepth: { type: Number, default: 6 },
-  indentStep: { type: Number, default: 16 },
-  rootMargin: { type: String, default: '-80px 0px -60% 0px' },
-})
+const props = withDefaults(
+  defineProps<{
+    headings?: Heading[]
+    minDepth?: number
+    maxDepth?: number
+    indentStep?: number
+    rootMargin?: string
+  }>(),
+  {
+    headings: () => [],
+    minDepth: 1,
+    maxDepth: 6,
+    indentStep: 16,
+    rootMargin: '-80px 0px -60% 0px',
+  }
+)
 
 const activeId = ref('')
-let observer = null
+let observer: IntersectionObserver | null = null
 
 const visibleHeadings = computed(() =>
   props.headings.filter(h => h.depth >= props.minDepth && h.depth <= props.maxDepth)
@@ -44,11 +54,11 @@ const baseDepth = computed(() => {
   return Math.min(...visibleHeadings.value.map(h => h.depth))
 })
 
-function indentSize(depth) {
+function indentSize(depth: number): number {
   return (depth - baseDepth.value) * props.indentStep
 }
 
-function scrollTo(id) {
+function scrollTo(id: string): void {
   const el = document.getElementById(id)
   if (el) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -79,7 +89,7 @@ onMounted(() => {
   nextTick(() => {
     for (const h of visibleHeadings.value) {
       const el = document.getElementById(h.id)
-      if (el) observer.observe(el)
+      if (el) observer!.observe(el)
     }
   })
 })

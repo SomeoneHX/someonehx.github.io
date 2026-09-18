@@ -21,7 +21,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import NavBar from '@/components/NavBar.vue'
 import FooterBar from '@/components/FooterBar.vue'
 import CursorFX from '@/components/CursorFX.vue'
@@ -40,13 +40,13 @@ useSeoHead()
    文章卡片例外：慢动作激活时 ArticleCard 自己放行 Shift+点击并存 rect，
    走原生 FLIP 路径，这里只管普通站内链接 */
 const router = useRouter()
-onMounted(() => registerSlowMotion({ navigate: (href) => router.push(href) }))
+onMounted(() => registerSlowMotion({ navigate: (href: string) => router.push(href) }))
 
 /* 本次路由切换是否来自文章卡片点击（FLIP 进入）。
    探测时机：旧页开始离开、新组件尚未 setup 消费 card rect —— 只能看不能取。 */
 let flipNav = false
 
-function onBeforeLeave() {
+function onBeforeLeave(): void {
   flipNav = !!peekCardRect()
 }
 
@@ -61,7 +61,7 @@ function onBeforeLeave() {
    被 Vue 跳过，导致 state.isLeaving 卡死 -> 新页面永不挂载（空白页），
    后续所有导航也被 Transition 的占位符吞掉（URL 变了仍空白）。
    必须推迟到下一帧，等当前更新收尾。 */
-function onLeave(el, done) {
+function onLeave(el: Element, done: () => void): void {
   /* 旧页即将卸载:通知自定义指针解除吸附,避免残留变形框 */
   window.dispatchEvent(new CustomEvent('cfx:leave'))
   /* 任何离开先把可能的残留垫底快照清掉(上一次 FLIP 动画中断时的兜底) */
@@ -69,7 +69,7 @@ function onLeave(el, done) {
   if (flipNav) {
     /* FLIP:旧列表页克隆为垫底快照垫在内容层下——列表不随卸载消失,
        由文章从卡片位放大逐步盖住;动画结束 ArticleView 同帧移除 */
-    mountFlipGhost(el)
+    mountFlipGhost(el as HTMLElement)
     requestAnimationFrame(() => done())
     return
   }
@@ -78,10 +78,10 @@ function onLeave(el, done) {
 
 /* 新页进入：FLIP 导航跳过卷帘动画（由 ArticleView 自身从卡片位置展开），
    其余页面播放「文字逐块滚落」。flipNav 用完即复位，避免泄漏到下次导航 */
-async function onEnter(el, done) {
+async function onEnter(el: Element, done: () => void): Promise<void> {
   try {
     if (!flipNav) {
-      await pageEnter(el)
+      await pageEnter(el as HTMLElement)
     }
   } catch {
     /* 动画异常不阻塞切换 */

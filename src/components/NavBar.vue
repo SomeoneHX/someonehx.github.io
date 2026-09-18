@@ -48,7 +48,7 @@
   <SearchModal :visible="showSearch" @close="closeSearch" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref, onUnmounted } from 'vue'
 import { useDarkMode } from '@/composables/useDarkMode'
 import SearchModal from '@/components/SearchModal.vue'
@@ -57,7 +57,7 @@ const { mode, initDarkMode, toggleDarkMode } = useDarkMode()
 onMounted(initDarkMode)
 
 /* 三态主题：图标表示当前模式，提示语表示点击后的下一步 */
-const THEME_META = {
+const THEME_META: Record<string, { icon: string; next: string }> = {
   light: { icon: 'mdi:white-balance-sunny', next: '切换深色' },
   dark: { icon: 'mdi:moon-waning-crescent', next: '切换为跟随系统' },
   auto: { icon: 'mdi:theme-light-dark', next: '切换亮色' },
@@ -68,15 +68,15 @@ const themeNextLabel = computed(() => themeMeta.value.next)
 
 const showSearch = ref(false)
 
-function openSearch() {
+function openSearch(): void {
   showSearch.value = true
 }
 
-function closeSearch() {
+function closeSearch(): void {
   showSearch.value = false
 }
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent): void {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
     e.preventDefault()
     showSearch.value = true

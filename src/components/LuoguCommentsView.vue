@@ -13,13 +13,13 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useDarkMode } from '@/composables/useDarkMode'
 
-const props = defineProps({
-  articleId: { type: String, required: true },
-})
+const props = defineProps<{
+  articleId: string
+}>()
 
 /* LGS Reply Viewer 部署基址（iframe 指向其 #/embed 页，只读展示洛谷文章评论区） */
 const VIEWER_BASE = 'https://someonehx.github.io/lgs-reply-viewer/'
@@ -27,7 +27,7 @@ const RESIZE_MESSAGE = 'lgs-reply-viewer:resize'
 
 const { isDark } = useDarkMode()
 
-const frameRef = ref(null)
+const frameRef = ref<HTMLIFrameElement | null>(null)
 const frameKey = ref(0)
 const height = ref(200)
 
@@ -47,11 +47,11 @@ watch(theme, () => {
 })
 
 /* 嵌入页通过 postMessage 上报自身高度，避免宿主页出现滚动条 */
-function onMessage(event) {
-  const data = event.data
+function onMessage(event: MessageEvent): void {
+  const data = event.data as { type?: string; height?: number } | null
   if (!data || data.type !== RESIZE_MESSAGE) return
   if (event.source !== frameRef.value?.contentWindow) return
-  const h = Math.ceil(data.height)
+  const h = Math.ceil(data.height ?? 0)
   if (h > 0) height.value = h
 }
 

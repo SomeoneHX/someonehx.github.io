@@ -6,7 +6,8 @@
 
 | 类别 | 技术 |
 |------|------|
-| 框架 | Vue 3 (Composition API + `<script setup>`) |
+| 语言 | TypeScript（strict，`npm run typecheck` 类型检查） |
+| 框架 | Vue 3 (Composition API + `<script setup lang="ts">`) |
 | 构建工具 | Vite 6 |
 | 静态生成 | vite-ssg 28 |
 | 路由 | vue-router 4 |
@@ -21,9 +22,10 @@
 git clone https://github.com/SomeoneHX/someonehx.github.io.git
 cd someonehx.github.io
 npm install
-npm run dev      # 启动开发服务器（修改文章会自动重建并刷新页面）
-npm run build    # 构建内容数据、预渲染全部路由，并输出 dist/
-npm run preview  # 预览构建产物
+npm run dev        # 启动开发服务器（修改文章会自动重建并刷新页面）
+npm run build      # 构建内容数据、预渲染全部路由，并输出 dist/
+npm run preview    # 预览构建产物
+npm run typecheck  # vue-tsc 全量类型检查（不产出文件）
 ```
 
 ## 添加文章
@@ -78,7 +80,7 @@ slug: custom-slug
 :::
 ```
 
-折叠框开合带平滑动画（`src/utils/boxFx.js`）：展开是**抽屉高度滑出**、内容从模糊聚焦变清晰（340ms）；收回反向——内容先模糊、同时高度合拢（260ms）。中途再次点击会从当前形态反向继续，不跳变；系统开启"减弱动态效果"时直接切换、无动画。
+折叠框开合带平滑动画（`src/utils/boxFx.ts`）：展开是**抽屉高度滑出**、内容从模糊聚焦变清晰（340ms）；收回反向——内容先模糊、同时高度合拢（260ms）。中途再次点击会从当前形态反向继续，不跳变；系统开启"减弱动态效果"时直接切换、无动画。
 
 ### 洛谷评论区嵌入
 
@@ -138,13 +140,13 @@ slug: custom-slug
 - **直达/刷新也播**：SSG 静态 HTML 先由 `.app__main` 首帧 gate（`opacity: 0`）隐藏，JS 挂载后经 transition `appear` 钩子播放相同入场，不会"闪现内容再重播"。
 - **可访问性**：遵循 `prefers-reduced-motion`（开启即跳过动画、内容直接显示），无 JS 时由 `<noscript>` 强制显示。
 
-动画调度集中在 `src/utils/pageTransition.js`：时长、行间隔、模糊半径、总预算等常量都定义在文件顶部，可按喜好调整（例如把模糊半径常量设为 `0` 即关闭模糊聚焦效果）。
+动画调度集中在 `src/utils/pageTransition.ts`：时长、行间隔、模糊半径、总预算等常量都定义在文件顶部，可按喜好调整（例如把模糊半径常量设为 `0` 即关闭模糊聚焦效果）。
 
 ### 慢动作（欣赏）模式
 
 全站大动画（FLIP 展开、页面进出逐行落位、列表垫底退场等）均由 WAAPI 驱动。按住 **Shift** 再触发导航或点击卡片，动画会以 0.25×（4 倍慢）播放，便于逐帧欣赏过渡细节；松开立即恢复原速。右下角会出现「慢动作」小徽标提示状态。输入框内按住 Shift（输入大写 / 选字）不会误触发，窗口失焦自动复位。
 
-实现零侵入：`src/utils/slowMotion.js` 劫持 `Element.prototype.animate` 统一登记动画，按 Shift 状态批量调整 `playbackRate`，现有动画代码无需感知；CSS 微效（hover 过渡）通过放大 `--transition-*` 时长令牌同步变慢。Shift+点击站内链接会改为站内慢速导航（避免浏览器默认新开窗口），Shift+点击文章卡片仍走完整 FLIP。速率在文件顶部 `DEFAULT_FACTOR` 常量调整（0.25 = 4 倍慢，0.5 = 2 倍慢）。
+实现零侵入：`src/utils/slowMotion.ts` 劫持 `Element.prototype.animate` 统一登记动画，按 Shift 状态批量调整 `playbackRate`，现有动画代码无需感知；CSS 微效（hover 过渡）通过放大 `--transition-*` 时长令牌同步变慢。Shift+点击站内链接会改为站内慢速导航（避免浏览器默认新开窗口），Shift+点击文章卡片仍走完整 FLIP。速率在文件顶部 `DEFAULT_FACTOR` 常量调整（0.25 = 4 倍慢，0.5 = 2 倍慢）。
 
 ## 自定义指针（CursorFX）
 
@@ -164,23 +166,30 @@ slug: custom-slug
 ```
 someonehx.github.io/
 ├── index.html                  # HTML 入口
-├── vite.config.js              # Vite + vite-ssg 配置
+├── vite.config.ts              # Vite + vite-ssg 配置
+├── tsconfig.json               # TypeScript 配置（strict）
 ├── package.json                # 依赖与脚本
 ├── scripts/
-│   └── build-content.mjs       # 构建文章元数据、搜索文本和 Markdown 原文
+│   ├── build-content.mjs       # 构建文章元数据、搜索文本和 Markdown 原文
+│   └── generate-site-files.mjs # 生成 sitemap.xml / feed.xml（复用 src/site.ts）
 ├── content/
 │   └── articles/               # 所有文章（.md 文件）
 ├── src/
-│   ├── main.js                 # 入口：ViteSSG 创建应用
+│   ├── main.ts                 # 入口：ViteSSG 创建应用 + SW 注册
 │   ├── App.vue                 # 根组件（路由过渡协调 + CursorFX / 慢动作注册）
+│   ├── site.ts                 # 站点级常量（URL/名称/RSS）
+│   ├── types.ts                # 共享类型：Article / ContentData / Heading
+│   ├── env.d.ts                # content.json 类型声明 + *.mjs 插件兜底
+│   ├── global-components.d.ts  # 全局组件类型（VIcon / ClientOnly）
 │   ├── router/
-│   │   └── index.js            # 路由定义
+│   │   └── index.ts            # 路由定义
 │   ├── generated/              # gitignore，构建产物
 │   │   └── content.json        # 编译后的文章数据
 │   ├── composables/
-│   │   └── useSeoHead.js       # 逐页 SEO head（标题/描述/OG/JSON-LD）
+│   │   ├── useSeoHead.ts       # 逐页 SEO head（标题/描述/OG）
+│   │   └── useDarkMode.ts      # 三态主题（亮/暗/跟随系统）
 │   ├── data/
-│   │   └── profile.js          # 个人资料与外链数据
+│   │   └── profile.ts          # 个人资料与外链数据
 │   ├── views/
 │   │   ├── HomeView.vue        # 主页
 │   │   ├── BlogView.vue        # 博客列表（含标签筛选 + 加载更多）
@@ -201,7 +210,7 @@ someonehx.github.io/
 │   │   ├── ArticleToc.vue      # 文章目录
 │   │   ├── GiscusView.vue      # 评论区容器（Giscus；绑定 luoguArticle 时含「洛谷评论」标签页）
 │   │   ├── LuoguCommentsView.vue # 洛谷评论只读嵌入（lgs-reply-viewer iframe，postMessage 自适应高度）
-│   │   ├── SearchModal.vue     # 全文搜索弹层
+│   │   ├── SearchModal.vue     # 全文搜索弹层（Fuse.js）
 │   │   ├── ImageViewer.vue     # 图片灯箱
 │   │   └── FooterBar.vue       # 页脚
 │   ├── styles/
@@ -209,12 +218,13 @@ someonehx.github.io/
 │   │   ├── variables.css       # 设计令牌（CSS 变量）
 │   │   ├── global.css          # 全局布局 + 首帧动画 gate
 │   │   └── card.css            # 卡片组件样式
-    │   └── utils/
-    │       ├── pageTransition.js   # 页面入场动画（逐行落位 + 模糊聚焦）
-    │       ├── cardStore.js        # 文章 FLIP 动画状态（卡片 rect 暂存）
-    │       ├── flipGhost.js        # FLIP 垫底快照（旧列表克隆垫底 + 缩小模糊退场）
-    │       ├── slowMotion.js       # 慢动作（欣赏）模式：按住 Shift 全站动画降速
-    │       └── boxFx.js            # 折叠框开合动画（抽屉滑出 + 模糊聚焦/失焦）
+│   └── utils/
+│       ├── pageTransition.ts   # 页面入场动画（逐行落位 + 模糊聚焦）
+│       ├── cardStore.ts        # 文章 FLIP 动画状态（卡片 rect 暂存）
+│       ├── flipGhost.ts        # FLIP 垫底快照（旧列表克隆垫底 + 缩小模糊退场）
+│       ├── slowMotion.ts       # 慢动作（欣赏）模式：按住 Shift 全站动画降速
+│       ├── markdown.ts         # unified/remark/rehype 渲染管线（前端）
+│       └── boxFx.ts            # 折叠框开合动画（抽屉滑出 + 模糊聚焦/失焦）
 ├── public/                     # 静态资源（favicon 等）
 └── .github/
     └── workflows/              # GitHub Actions 部署配置

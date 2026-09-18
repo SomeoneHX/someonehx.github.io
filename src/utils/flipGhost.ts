@@ -19,8 +19,8 @@
  * 稳:列表无论滚到哪,克隆体 top 就是旧页根此刻相对视口的 top。
  */
 
-let ghostEl = null
-let retreatAnim = null
+let ghostEl: HTMLElement | null = null
+let retreatAnim: Animation | null = null
 
 /* 克隆体中会重复执行/自动播放/产生副作用的节点,直接剔除:
    script(单页内视图根本无,防意外)、iframe(会重载)、video/audio/object/embed、
@@ -32,10 +32,10 @@ const RETREAT_SCALE = 0.92
 const RETREAT_BLUR = 10 /* px */
 const RETREAT_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
-export function mountFlipGhost(source) {
+export function mountFlipGhost(source: HTMLElement): void {
   removeFlipGhost()
 
-  const el = source.cloneNode(true)
+  const el = source.cloneNode(true) as HTMLElement
   el.querySelectorAll(REMOVE_SELECTOR).forEach((n) => n.remove())
 
   /* fixed 容器宽度锁为源宽:内容折行、网格列数与点击瞬间一致(避免 clone 进
@@ -64,7 +64,7 @@ export function mountFlipGhost(source) {
    必须与文章放大动画同帧启动,且等文章动画完成后随 removeFlipGhost 一起消失;
    用 WAAPI(而非 CSS transition)避免 reflow 触发时序问题,无 inline 残留。
    duration 默认与 ArticleView 放大时长一致。 */
-export function startGhostRetreat({ duration = 500 } = {}) {
+export function startGhostRetreat({ duration = 500 }: { duration?: number } = {}): void {
   if (!ghostEl) return
   if (retreatAnim) retreatAnim.cancel()
 
@@ -88,7 +88,7 @@ export function startGhostRetreat({ duration = 500 } = {}) {
   retreatAnim.finished.catch(() => {})
 }
 
-export function removeFlipGhost() {
+export function removeFlipGhost(): void {
   if (retreatAnim) {
     retreatAnim.cancel()
     retreatAnim = null

@@ -1,4 +1,5 @@
 import { unified } from 'unified'
+import type { Heading } from '@/types'
 import remarkParse from 'remark-parse'
 import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
@@ -34,15 +35,15 @@ const processor = unified()
   .use(rehypeHeading)
   .use(rehypeStringify)
 
-export async function renderMarkdown(markdown) {
+export async function renderMarkdown(markdown: string): Promise<string> {
   const result = await processor.process(markdown)
   return String(result)
 }
 
-export async function renderMarkdownWithHeadings(markdown) {
+export async function renderMarkdownWithHeadings(markdown: string): Promise<{ html: string; headings: Heading[] }> {
   const result = await processor.process(markdown)
   return {
     html: String(result),
-    headings: result.data.headings || [],
+    headings: (result.data.headings as Heading[] | undefined) || [],
   }
 }

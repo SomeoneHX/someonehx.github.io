@@ -55,22 +55,22 @@
       class="giscus-section__panel"
       role="tabpanel"
     >
-      <LuoguCommentsView :article-id="luoguArticle" />
+      <LuoguCommentsView :article-id="luoguArticle || ''" />
     </div>
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import 'giscus'
 import { ref, computed } from 'vue'
 import { useDarkMode } from '@/composables/useDarkMode'
 import LuoguCommentsView from './LuoguCommentsView.vue'
 
-const props = defineProps({
-  term: { type: String, required: true },
-  /* 元数据里绑定的洛谷文章 ID：存在时在评论栏显示 Giscus / 洛谷评论 切换 */
-  luoguArticle: { type: String, default: '' },
-})
+const props = defineProps<{
+  term: string
+  /** 元数据里绑定的洛谷文章 ID：存在时在评论栏显示 Giscus / 洛谷评论 切换 */
+  luoguArticle?: string | null
+}>()
 
 const config = {
   repo: 'SomeoneHX/someonehx.github.io',
@@ -90,7 +90,7 @@ const { isDark } = useDarkMode()
 const theme = computed(() => isDark.value ? 'dark' : 'light')
 
 const hasLuogu = computed(() => !!props.luoguArticle)
-const activeTab = ref('giscus')
+const activeTab = ref<'giscus' | 'luogu'>('giscus')
 </script>
 
 <style scoped>

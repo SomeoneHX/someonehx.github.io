@@ -1,3 +1,4 @@
+import type { RouteRecordRaw } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import BlogView from '@/views/BlogView.vue'
 import ArticleView from '@/views/ArticleView.vue'
@@ -7,7 +8,7 @@ import ArchivesView from '@/views/ArchivesView.vue'
 import GuestbookView from '@/views/GuestbookView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   { path: '/', name: 'Home', component: HomeView },
   { path: '/blog/', name: 'Blog', component: BlogView },
   { path: '/blog/:slug/', name: 'Article', component: ArticleView },

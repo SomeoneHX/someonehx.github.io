@@ -14,8 +14,14 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+
+interface BingImage {
+  date: string
+  url: string
+  copyright: string
+}
 
 const CACHE_KEY = 'hero-banner'
 
@@ -35,12 +41,12 @@ const overlayStyle = computed(() => {
   }
 })
 
-function onScroll() {
+function onScroll(): void {
   const heroHeight = window.innerHeight - 56
   scrollProgress.value = Math.min(window.scrollY / heroHeight, 1)
 }
 
-function loadImage(url, cp) {
+function loadImage(url: string, cp: string): void {
   const img = new Image()
   img.onload = () => {
     bgUrl.value = url
@@ -61,7 +67,7 @@ onMounted(async () => {
 
   try {
     const res = await fetch('https://bing.biturl.top/?format=json')
-    const data = await res.json()
+    const data = (await res.json()) as BingImage
     setCached(data.url, data.copyright)
     loadImage(data.url, data.copyright)
   } catch {
@@ -73,11 +79,11 @@ onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
 })
 
-function getCached() {
+function getCached(): BingImage | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY)
     if (!raw) return null
-    const data = JSON.parse(raw)
+    const data = JSON.parse(raw) as BingImage
     const today = new Date().toISOString().slice(0, 10)
     return data.date === today ? data : null
   } catch {
@@ -85,8 +91,8 @@ function getCached() {
   }
 }
 
-function setCached(url, cp) {
-  const data = {
+function setCached(url: string, cp: string): void {
+  const data: BingImage = {
     date: new Date().toISOString().slice(0, 10),
     url,
     copyright: cp,

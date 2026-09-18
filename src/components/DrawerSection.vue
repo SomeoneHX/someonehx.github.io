@@ -47,7 +47,7 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import data from '@/generated/content.json'
@@ -61,7 +61,7 @@ const projectArticles = computed(() => {
   return data.articles.filter(a => slugs.includes(a.slug))
 })
 
-function goToTag(tag) {
+function goToTag(tag: string): void {
   router.push(`/tags/${tag}/`)
 }
 </script>

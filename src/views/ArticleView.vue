@@ -144,8 +144,9 @@
   </article>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import type { CSSProperties } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DynamicContent from '@/components/DynamicContent.vue'
 import GiscusView from '@/components/GiscusView.vue'
@@ -153,12 +154,13 @@ import ArticleToc from '@/components/ArticleToc.vue'
 import { takeCardRect } from '@/utils/cardStore'
 import { removeFlipGhost, startGhostRetreat } from '@/utils/flipGhost'
 import data from '@/generated/content.json'
+import type { Article, Heading } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
-const rootRef = ref(null)
-const flipStyle = ref(null)
-const headings = ref([])
+const rootRef = ref<HTMLElement | null>(null)
+const flipStyle = ref<CSSProperties | null>(null)
+const headings = ref<Heading[]>([])
 const rect = takeCardRect()
 
 if (rect) {
@@ -198,7 +200,7 @@ if (rect) {
   const RADIUS_SEGMENTS = 24
   /* 数值求解 cubic-bezier(0.22, 1, 0.36, 1) 的 y(x):即主变换动画在时间 x
      处的进度 f(二分反解 bezier 参数),供圆角关键帧按真实时间轴排布 */
-  const bezierY = (p1x, p1y, p2x, p2y, x) => {
+  const bezierY = (p1x: number, p1y: number, p2x: number, p2y: number, x: number): number => {
     let lo = 0
     let hi = 1
     for (let k = 0; k < 24; k++) {
@@ -237,7 +239,7 @@ if (rect) {
     if (!el) return
 
     requestAnimationFrame(() => {
-      flipStyle.value = { ...flipStyle.value, boxShadow: undefined }
+      flipStyle.value = { ...flipStyle.value!, boxShadow: undefined }
 
       /* 同帧让垫底列表退场(整体轻微缩小 + 逐渐模糊),与文章放大互为纵深 */
       startGhostRetreat({ duration: FLIP_MS })
@@ -285,12 +287,12 @@ if (rect) {
          布局高 = 窗口视觉高 / 当前缩放,裁切线贴紧窗口下缘,无压扁无溢出。
          直接写 DOM style(避免每帧触发 Vue re-render),结束统一清理 */
       let rafId = 0
-      const applyWindow = (q) => {
+      const applyWindow = (q: number): void => {
         const s = s0 + (1 - s0) * q
         const winH = winH0 + (finalH - winH0) * q
         el.style.height = `${winH / s}px`
       }
-      const tick = () => {
+      const tick = (): void => {
         rafId = 0
         const timing = anim.effect?.getComputedTiming?.()
         const q = timing ? timing.progress : null
@@ -319,23 +321,25 @@ if (rect) {
   })
 }
 
-const article = computed(() =>
-  data.articles.find(a => a.slug === route.params.slug) || null
+const slug = route.params.slug as string
+
+const article = computed<Article | null>(() =>
+  data.articles.find(a => a.slug === slug) || null
 )
 
 /* 时间倒序列表中相邻一篇 = 上一篇（更新），下一篇（更旧） */
-const prevArticle = computed(() => {
-  const i = data.articles.findIndex(a => a.slug === route.params.slug)
+const prevArticle = computed<Article | null>(() => {
+  const i = data.articles.findIndex(a => a.slug === slug)
   return i > 0 ? data.articles[i - 1] : null
 })
 
-const nextArticle = computed(() => {
-  const i = data.articles.findIndex(a => a.slug === route.params.slug)
+const nextArticle = computed<Article | null>(() => {
+  const i = data.articles.findIndex(a => a.slug === slug)
   return i >= 0 && i < data.articles.length - 1 ? data.articles[i + 1] : null
 })
 
 /* 相关文章：按共同标签数排序，取最多 3 篇 */
-const related = computed(() => {
+const related = computed<Article[]>(() => {
   const cur = article.value
   if (!cur || !cur.tags.length) return []
   const tagSet = new Set(cur.tags)
@@ -345,7 +349,7 @@ const related = computed(() => {
       article: a,
       score: a.tags.filter(t => tagSet.has(t)).length,
     }))
-    .sort((x, y) => y.score - x.score || new Date(y.article.date) - new Date(x.article.date))
+    .sort((x, y) => y.score - x.score || new Date(y.article.date || 0).getTime() - new Date(x.article.date || 0).getTime())
     .slice(0, 3)
     .map(x => x.article)
 })
@@ -354,14 +358,14 @@ const related = computed(() => {
 const progress = ref(0)
 const showBackTop = ref(false)
 
-function onScroll() {
+function onScroll(): void {
   const scroller = document.scrollingElement || document.documentElement
   const max = scroller.scrollHeight - scroller.clientHeight
   progress.value = max > 0 ? Math.min(100, (scroller.scrollTop / max) * 100) : 0
   showBackTop.value = scroller.scrollTop > 600
 }
 
-function scrollToTop() {
+function scrollToTop(): void {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -375,7 +379,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', onScroll)
 })
 
-function formatDate(date) {
+function formatDate(date: string | null): string {
   if (!date) return ''
   return new Date(date).toLocaleDateString('zh-CN', {
     year: 'numeric',
@@ -384,7 +388,7 @@ function formatDate(date) {
   })
 }
 
-function goBack() {
+function goBack(): void {
   if (window.history.length > 1) {
     router.back()
   } else {

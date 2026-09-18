@@ -11,13 +11,16 @@
   </Teleport>
 </template>
 
-<script setup>
-const props = defineProps({
-  src: { type: String, default: '' },
-  alt: { type: String, default: '' },
-})
-const emit = defineEmits(['close'])
-function close() { emit('close') }
+<script setup lang="ts">
+withDefaults(
+  defineProps<{
+    src?: string
+    alt?: string
+  }>(),
+  { src: '', alt: '' }
+)
+const emit = defineEmits<{ close: [] }>()
+function close(): void { emit('close') }
 </script>
 
 <style scoped>

@@ -28,11 +28,21 @@ const TOTAL_BUDGET = 800  /* 首屏所有行落完的总时长预算（ms），�
 const POP_MIN = 180       /* 行多时单元素时长的下限 */
 const GAP_MIN = 20        /* 行多时行间隔的下限 */
 
+interface BlockItem {
+  node: Element
+  top: number
+  left: number
+}
+
+interface Row extends Array<BlockItem> {
+  anchorTop: number
+}
+
 /**
  * 按首屏行数给出 (pop, gap)：让总时长 ≈ (N-1)*gap + pop
  * 不超 TOTAL_BUDGET；行少则回落默认值。
  */
-function pace(rowCount) {
+function pace(rowCount: number): { pop: number; gap: number } {
   if (rowCount <= 1) return { pop: POP_MS, gap: 0 }
   const gap = Math.min(
     ROW_GAP_MS,
@@ -77,25 +87,27 @@ const SKIP_INSIDE =
   '.card, .article__related-item, .article__pager-link, .code-block, ' +
   '.about__timeline-item'
 
-const reducedMotion = () =>
+const reducedMotion = (): boolean =>
   typeof window !== 'undefined' &&
   !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-const waitFrames = (n = 1) =>
+const waitFrames = (n = 1): Promise<void> =>
   new Promise((r) => {
     let left = n
-    const tick = () => (--left <= 0 ? r() : requestAnimationFrame(tick))
+    const tick = (): void => {
+      if (--left <= 0) r()
+      else requestAnimationFrame(tick)
+    }
     requestAnimationFrame(tick)
   })
 
 /**
  * 按「行」级联排程落位动画：同一行同时落位、行与行自上而下错峰。
  * 键帧/节拍与页面入场完全同款（缩小偏上 + 透明 + 轻模糊 → 放大聚焦归位）。
- * @param {Array<Array<{node: Element}>>} rows groupRows/collectRows 产出的行
- * @returns {Animation[]} 已创建的 WAAPI 动画（fill:backwards 无 inline 残留）
+ * @returns 已创建的 WAAPI 动画（fill:backwards 无 inline 残留）
  */
-function scheduleRows(rows) {
-  const anims = []
+function scheduleRows(rows: Row[]): Animation[] {
+  const anims: Animation[] = []
   if (!rows.length) return anims
 
   /* 按行数自动估算节拍（行多收紧、行少舒展） */
@@ -135,18 +147,18 @@ function scheduleRows(rows) {
 /* ---------- 路由过渡层回调 ---------- */
 
 /** 旧页淡出（170ms），resolve 后可调用 done() */
-export function leaveFade(el) {
+export function leaveFade(el: Element): Promise<void> {
   if (reducedMotion() || !el || typeof el.animate !== 'function') return Promise.resolve()
   return el
     .animate([{ opacity: 1 }, { opacity: 0 }], { duration: 170, easing: 'ease' })
-    .finished.catch(() => {})
+    .finished.then(() => {})
 }
 
 /**
  * 新页进入：内容按行自上而下「缩小偏上 → 淡入放大归位」。
  * resolve 表示首屏所有行的落位动画结束。
  */
-export async function pageEnter(el) {
+export async function pageEnter(el: HTMLElement): Promise<void> {
   /* 新页从顶部开始展示（减弱动效时同样滚顶，只是不播动画） */
   window.scrollTo(0, 0)
 
@@ -155,7 +167,7 @@ export async function pageEnter(el) {
   /* 同步隐藏整页：本帧内绝不让完整页面闪出（finally 中必定恢复可见） */
   el.style.opacity = '0'
 
-  const anims = []
+  const anims: Animation[] = []
   try {
     const isArticle = el.classList.contains('article')
 
@@ -189,11 +201,11 @@ export async function pageEnter(el) {
 /* ---------- 候选块收集与按行分组 ---------- */
 
 /** 收集首屏内应落位的块（带视口位置），按 (top, left) 排序 */
-function collectBlocks(root) {
+function collectBlocks(root: Element): BlockItem[] {
   const scope = root.querySelector('.container.section') || root
   const vh = window.innerHeight || 800
 
-  const out = []
+  const out: BlockItem[] = []
   for (const node of scope.querySelectorAll(BLOCK_SELECTOR)) {
     /* 严格嵌套在整块容器内的子元素交给父块，跳过（容器自身允许） */
     const wrap = node.closest(SKIP_INSIDE)
@@ -214,20 +226,20 @@ function collectBlocks(root) {
  * 把候选块聚成「行」：块顶相差在 ROW_TOL 内视为同一水平行。
  * 网格的一行卡片块顶相同 → 同一行；单栏文本块顶依次拉开 → 各成一行。
  */
-function collectRows(root) {
+function collectRows(root: Element): Row[] {
   return groupRows(collectBlocks(root))
 }
 
 /** 把已按 (top, left) 升序排列的块聚成「行」（同上容差；含自定义增量场景） */
-function groupRows(sorted) {
-  const rows = []
+function groupRows(sorted: BlockItem[]): Row[] {
+  const rows: Row[] = []
 
   for (const b of sorted) {
     const last = rows[rows.length - 1]
     if (last && b.top - last.anchorTop <= ROW_TOL) {
       last.push(b)
     } else {
-      const row = [b]
+      const row = [b] as Row
       row.anchorTop = b.top
       rows.push(row)
     }
@@ -243,13 +255,12 @@ function groupRows(sorted) {
  * 时序安全：同一同步块内完成「inline 遮隐 → 量位 → 排程 → 还原 inline」，
  * 浏览器无机会在中间绘制，可见性全程由 fill:backwards 维持，绝不闪出整卡。
  * 减弱动效时直接放行，不播动画。
- * @param {Iterable<Element>} nodes 已完成布局的新增节点
  */
-export async function revealNodes(nodes) {
+export async function revealNodes(nodes: Iterable<Element> | null | undefined): Promise<void> {
   const list = Array.from(nodes || [])
   if (!list.length || reducedMotion()) return
 
-  const items = []
+  const items: BlockItem[] = []
   for (const node of list) {
     if (!(node instanceof Element)) continue
     const r = node.getBoundingClientRect()
@@ -259,15 +270,15 @@ export async function revealNodes(nodes) {
   if (!items.length) return
 
   /* 先整批遮隐，防止量位/排程期间新卡片被绘制出来 */
-  for (const it of items) it.node.style.opacity = '0'
+  for (const it of items) (it.node as HTMLElement).style.opacity = '0'
 
-  let anims = []
+  let anims: Animation[] = []
   try {
     items.sort((a, b) => a.top - b.top || a.left - b.left)
     anims = scheduleRows(groupRows(items))
   } finally {
     /* 同帧还原 inline；此后由动画 fill 控制初态，无残留内联样式 */
-    for (const it of items) it.node.style.opacity = ''
+    for (const it of items) (it.node as HTMLElement).style.opacity = ''
   }
 
   if (!anims.length) return

@@ -32,11 +32,12 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import data from '@/generated/content.json'
+import type { Article } from '@/types'
 
-function formatDate(date) {
+function formatDate(date: string | null): string {
   if (!date) return ''
   return new Date(date).toLocaleDateString('zh-CN', {
     month: '2-digit',
@@ -45,7 +46,7 @@ function formatDate(date) {
 }
 
 const years = computed(() => {
-  const map = {}
+  const map: Record<number, Record<number, Article[]>> = {}
   for (const a of data.articles) {
     if (!a.date) continue
     const d = new Date(a.date)
@@ -57,11 +58,11 @@ const years = computed(() => {
   }
 
   return Object.entries(map)
-    .sort(([a], [b]) => b - a)
+    .sort(([a], [b]) => Number(b) - Number(a))
     .map(([year, months]) => ({
       year: Number(year),
       months: Object.entries(months)
-        .sort(([a], [b]) => b - a)
+        .sort(([a], [b]) => Number(b) - Number(a))
         .map(([month, articles]) => ({
           month: Number(month),
           articles,

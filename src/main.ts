@@ -44,7 +44,7 @@ if (
   })
 }
 
-function showUpdateToast(onRefresh) {
+function showUpdateToast(onRefresh: () => void) {
   if (document.querySelector('.app-toast')) return
   const el = document.createElement('div')
   el.className = 'app-toast'

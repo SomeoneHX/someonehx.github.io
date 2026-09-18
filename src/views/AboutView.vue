@@ -65,7 +65,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { profileLinks as links } from '@/data/profile'
 
 const skills = [

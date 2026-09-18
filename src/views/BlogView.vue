@@ -38,7 +38,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArticleCard from '@/components/ArticleCard.vue'
@@ -50,11 +50,11 @@ const PAGE_STEP = 6
 const route = useRoute()
 const router = useRouter()
 
-function goToTag(tag) {
+function goToTag(tag: string): void {
   router.push(`/tags/${tag}/`)
 }
 
-function goBack() {
+function goBack(): void {
   if (window.history.length > 1) {
     router.back()
   } else {
@@ -63,14 +63,15 @@ function goBack() {
 }
 
 const filterLabel = computed(() => {
-  if (route.params.tag) return `标签: ${route.params.tag}`
+  const tag = route.params.tag as string | undefined
+  if (tag) return `标签: ${tag}`
   return ''
 })
 
 /* 全量视图：置顶优先（稳定排序，保留时间倒序的相对顺序）；
    标签筛选视图：保持时间倒序、不做置顶 */
 const filteredArticles = computed(() => {
-  const tag = route.params.tag
+  const tag = route.params.tag as string | undefined
   if (tag && data.tagsIndex[tag]) {
     const slugs = new Set(data.tagsIndex[tag])
     return data.articles.filter(a => slugs.has(a.slug))
@@ -83,9 +84,9 @@ const displayedArticles = computed(() => filteredArticles.value.slice(0, visible
 const hasMore = computed(() => visibleCount.value < filteredArticles.value.length)
 
 /* 卡片网格容器（用于定位本次新增的卡片节点） */
-const gridEl = ref(null)
+const gridEl = ref<HTMLElement | null>(null)
 
-async function loadMore() {
+async function loadMore(): Promise<void> {
   /* 记住旧截断点：新批次卡片 = 渲染完成后网格里从该下标往后的节点 */
   const from = visibleCount.value
   visibleCount.value += PAGE_STEP

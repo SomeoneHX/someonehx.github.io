@@ -23,10 +23,12 @@ const BLUR_PX = 8          /* 初态模糊半径（px） */
 const OP_LOW = 0.25        /* 初态透明度（配合模糊，避免生硬跳变） */
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)' /* 与全站一致的缓动 */
 
-/* 每个运行动画的方向，供中途点击反向 */
-const animDir = new WeakMap()
+type BoxDir = 'open' | 'close'
 
-function prefersReduce() {
+/* 每个运行动画的方向，供中途点击反向 */
+const animDir = new WeakMap<Animation, BoxDir>()
+
+function prefersReduce(): boolean {
   return (
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
@@ -35,7 +37,7 @@ function prefersReduce() {
 }
 
 /* 读取 body 的目标几何：内容 padding 与分隔线宽（CSS 定义在 DynamicContent） */
-function readPad(body) {
+function readPad(body: HTMLElement): { pt: number; pb: number; bw: number } {
   const cs = getComputedStyle(body)
   return {
     pt: parseFloat(cs.paddingTop) || 0,
@@ -44,11 +46,11 @@ function readPad(body) {
   }
 }
 
-function blur(scale) {
+function blur(scale: number): string {
   return `blur(${Math.round(BLUR_PX * scale)}px)`
 }
 
-function openBox(box, body, fromH) {
+function openBox(box: Element, body: HTMLElement, fromH: number): void {
   box.setAttribute('data-open', '')
   const { pt, pb, bw } = readPad(body)
   const fullH = body.offsetHeight
@@ -92,7 +94,7 @@ function openBox(box, body, fromH) {
   })
 }
 
-function closeBox(box, body, fromH) {
+function closeBox(box: Element, body: HTMLElement, fromH: number): void {
   if (!box.hasAttribute('data-open')) return
   const { pt, pb, bw } = readPad(body)
   const fullH = body.offsetHeight
@@ -137,9 +139,9 @@ function closeBox(box, body, fromH) {
  * 切换折叠框开合。供 DynamicContent 的点击委托调用。
  * 动画进行中再次调用 = 反向（终止当前动画，从当前可见形态朝反方向播）。
  */
-export function toggleBoxFx(box) {
-  const body = box.querySelector(':scope > .box__body')
-  const header = box.querySelector(':scope > .box__header')
+export function toggleBoxFx(box: Element): void {
+  const body = box.querySelector<HTMLElement>(':scope > .box__body')
+  const header = box.querySelector<HTMLElement>(':scope > .box__header')
   if (!body || !header) return
 
   if (prefersReduce()) {
@@ -148,8 +150,10 @@ export function toggleBoxFx(box) {
     return
   }
 
-  const running = body.getAnimations().filter((a) => a.effect?.target === body)
-  let lastDir = null
+  const running = body
+    .getAnimations()
+    .filter((a) => (a.effect as KeyframeEffect | null)?.target === body)
+  let lastDir: BoxDir | null = null
   let curH = body.getBoundingClientRect().height
   if (running.length) {
     lastDir = animDir.get(running[running.length - 1]) || null

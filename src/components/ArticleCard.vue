@@ -42,31 +42,34 @@
   </router-link>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { Article } from '@/types'
 import { saveCardRect } from '@/utils/cardStore'
 import { isSlowMotion } from '@/utils/slowMotion'
 
-defineProps({
-  article: { type: Object, required: true },
-})
+defineProps<{
+  article: Article
+}>()
 
-defineEmits(['tagClick'])
+defineEmits<{
+  tagClick: [tag: string]
+}>()
 
-function handleCardClick(event, navigate) {
+function handleCardClick(event: MouseEvent, navigate: () => void): void {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey) return
   /* 慢动作激活时放行 Shift+点击：照常走本卡片的 rect 保存 + navigate，
      保证 FLIP 分支完整（shift+click 让位浏览器默认的习惯仅限非慢动作态） */
   if (event.shiftKey && !isSlowMotion()) return
   event.preventDefault()
-  saveCardRect(event.currentTarget.getBoundingClientRect())
+  saveCardRect((event.currentTarget as HTMLElement).getBoundingClientRect())
   navigate()
 }
 
-function openExternalLink(url) {
+function openExternalLink(url: string): void {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
-function formatDate(date) {
+function formatDate(date: string | null): string {
   if (!date) return ''
   return new Date(date).toLocaleDateString('zh-CN', {
     year: 'numeric',

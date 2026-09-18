@@ -3,19 +3,22 @@
   <ImageViewer :src="viewerSrc" :alt="viewerAlt" @close="viewerSrc = ''" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import ImageViewer from './ImageViewer.vue'
 import { renderMarkdownWithHeadings } from '@/utils/markdown'
 import { toggleBoxFx } from '@/utils/boxFx'
+import type { Heading } from '@/types'
 
-const props = defineProps({
-  markdown: { type: String, required: true },
-})
+const props = defineProps<{
+  markdown: string
+}>()
 
-const emit = defineEmits(['rendered'])
+const emit = defineEmits<{
+  rendered: [headings: Heading[]]
+}>()
 
-const root = ref(null)
+const root = ref<HTMLElement | null>(null)
 const viewerSrc = ref('')
 const viewerAlt = ref('')
 const renderedHtml = ref('')
@@ -40,7 +43,7 @@ watch(
    为每个标题追加一个可点击的「#」链接，hover 显示、点击复制带锚点的
    完整 URL——「取链接」动作，不改地址栏（人已在标题旁，URL 同步交给
    目录跳转负责）。注入幂等（重复渲染不叠加）。 */
-function injectHeadingAnchors() {
+function injectHeadingAnchors(): void {
   const scope = root.value
   if (!scope || typeof document === 'undefined') return
   const heads = scope.querySelectorAll('h2[id], h3[id], h4[id]')
@@ -55,8 +58,8 @@ function injectHeadingAnchors() {
   }
 }
 
-async function onAnchorClick(e) {
-  const a = e.target.closest('.heading-anchor')
+async function onAnchorClick(e: MouseEvent): Promise<void> {
+  const a = (e.target as Element).closest('.heading-anchor')
   if (!a) return
   /* 修饰键 / 非左键：交给浏览器默认行为（新标签打开带锚点链接） */
   if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
@@ -74,11 +77,11 @@ async function onAnchorClick(e) {
 }
 
 /* 剪贴板写入：Clipboard API + 非安全上下文 execCommand 兜底 */
-async function copyText(text) {
+async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text)
     return true
-  } catch (err) {
+  } catch {
     try {
       const ta = document.createElement('textarea')
       ta.value = text
@@ -88,27 +91,27 @@ async function copyText(text) {
       const ok = document.execCommand('copy')
       ta.remove()
       return ok
-    } catch (err2) {
+    } catch {
       return false
     }
   }
 }
 
-function onImageClick(e) {
-  const img = e.target.closest('img')
+function onImageClick(e: MouseEvent): void {
+  const img = (e.target as Element).closest('img')
   if (!img || img.closest('.bilibili-embed')) return
   viewerSrc.value = img.currentSrc || img.src
   viewerAlt.value = img.alt || ''
 }
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent): void {
   if (e.key === 'Escape' && viewerSrc.value) {
     viewerSrc.value = ''
   }
 }
 
-function onBoxToggle(e) {
-  const header = e.target.closest('.box__header')
+function onBoxToggle(e: MouseEvent): void {
+  const header = (e.target as Element).closest('.box__header')
   if (!header) return
   const box = header.closest('.box')
   if (!box) return
@@ -116,13 +119,13 @@ function onBoxToggle(e) {
 }
 
 /* 代码块复制：事件委托，从 pre code 中取纯源码（剥离行号 span） */
-async function onCopyClick(e) {
-  const btn = e.target.closest('[data-code-copy]')
+async function onCopyClick(e: MouseEvent): Promise<void> {
+  const btn = (e.target as Element).closest<HTMLElement>('[data-code-copy]')
   if (!btn) return
   const codeEl = btn.closest('.code-block')?.querySelector('pre code')
   if (!codeEl) return
 
-  const clone = codeEl.cloneNode(true)
+  const clone = codeEl.cloneNode(true) as HTMLElement
   clone.querySelectorAll('.line-number').forEach((n) => n.remove())
   const text = clone.innerText || codeEl.textContent || ''
 

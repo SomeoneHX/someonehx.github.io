@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, RSS_URL } from '../src/site.js'
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, RSS_URL } from '../src/site.ts'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const contentPath = resolve(root, 'src/generated/content.json')

@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite'
+import type { UserConfig, ViteDevServer } from 'vite'
+import type { ViteSSGOptions } from 'vite-ssg'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import { readFileSync } from 'fs'
@@ -10,10 +12,10 @@ function contentHotReload() {
 
   return {
     name: 'content-hot-reload',
-    configureServer(server) {
+    configureServer(server: ViteDevServer) {
       server.watcher.add(articlesDir)
 
-      const rebuild = (file) => {
+      const rebuild = (file: string) => {
         if (!file.endsWith('.md')) return
 
         try {
@@ -31,7 +33,10 @@ function contentHotReload() {
   }
 }
 
-export default defineConfig({
+/* ssgOptions 属于 vite-ssg 的扩展字段（vite-ssg 本身不导出 defineConfig） */
+type SsgUserConfig = UserConfig & { ssgOptions?: ViteSSGOptions }
+
+const config: SsgUserConfig = {
   plugins: [vue(), contentHotReload()],
   resolve: {
     alias: {
@@ -53,4 +58,7 @@ export default defineConfig({
       return routes
     },
   },
-})
+}
+
+export default defineConfig(config)
+

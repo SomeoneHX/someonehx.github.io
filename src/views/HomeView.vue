@@ -8,7 +8,7 @@
   </main>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import HeroBanner from '@/components/HeroBanner.vue'
 import DrawerSection from '@/components/DrawerSection.vue'
 </script>

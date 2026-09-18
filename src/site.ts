@@ -7,7 +7,7 @@ export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.png`
 export const RSS_URL = `${SITE_URL}/feed.xml`
 
 /** 把本地路径（如 /covers/a.png）或相对路径拼成绝对 URL；已是 http(s) 原样返回 */
-export function absoluteUrl(path) {
+export function absoluteUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path
   return SITE_URL + (path.startsWith('/') ? path : `/${path}`)
 }
